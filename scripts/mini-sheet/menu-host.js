@@ -1,6 +1,6 @@
 /**
- * Menu host: the column of request buttons beside the Keeper's panel, and the flyout each one opens to
- * its right. Which buttons show depends on how many characters are selected (DESIGN.md, "Layout by number
+ * Menu host: the column of request buttons beside the Keeper's panel, and the flyout each one opens beside
+ * it. Which buttons show depends on how many characters are selected (DESIGN.md, "Layout by number
  * of tokens selected"). Clicking a button opens its menu and marks the button pressed; clicking it again
  * closes it. Each menu lives in its own part and plugs in through registerMenu(); until one is
  * registered, its flyout is an empty placeholder with the menu's title.
@@ -9,6 +9,8 @@
  * `staysOpen` (Assist) stays open while anything is selected, even when its button isn't offered.
  * The names card's value columns follow the open menu: SAN with Sanity, a menu's own `columns` (Assist: STR
  * or SIZ), otherwise SAN and Luck; the host tells the panel when they may have changed.
+ * A menu can also be opened with a starting state (`open(id, start)`, from a click on the mini sheet): the render
+ * gets it as `start`, and a menu already open takes it through the controller its render returned (`apply`).
  */
 import { element, warn } from "../utils.js";
 import { NAMES_COLUMNS } from "./cards.js";
@@ -17,20 +19,21 @@ import { NAMES_COLUMNS } from "./cards.js";
 const MENUS = Object.freeze({
   check: Object.freeze({ label: "Check", title: "Request a check", icon: "fa-dice-d20" }),
   sanity: Object.freeze({ label: "Sanity", title: "Sanity check", icon: "fa-brain" }),
-  item: Object.freeze({ label: "Item", title: "Item check", icon: "fa-gun" }),
+  other: Object.freeze({ label: "Other", title: "Other", icon: "fa-ellipsis" }),
   opposed: Object.freeze({ label: "Opposed", title: "Opposed roll", icon: "fa-right-left" }),
   assist: Object.freeze({ label: "Assist", title: "Assist", icon: "fa-people-carry-box" })
 });
 
 /**
- * One character: Check, Sanity, Item. Two: Check, Sanity, Opposed, Assist. Three or more: Check, Sanity, Assist
- * (DESIGN.md, "Layout by number of tokens selected").
+ * One character: Check, Sanity, Other. Two: Check, Sanity, Other, Opposed, Assist. Three or more: Check, Sanity,
+ * Other, Assist (DESIGN.md, "Layout by number of tokens selected"). Other is offered for every selection: its Luck
+ * section works for a group (Void, 2026-11-15).
  */
 function menusFor(count) {
   if (count < 1) return [];
-  if (count === 1) return ["check", "sanity", "item"];
-  if (count === 2) return ["check", "sanity", "opposed", "assist"];
-  return ["check", "sanity", "assist"];
+  if (count === 1) return ["check", "sanity", "other"];
+  if (count === 2) return ["check", "sanity", "other", "opposed", "assist"];
+  return ["check", "sanity", "other", "assist"];
 }
 
 /** The names card's columns for a menu that has none of its own: Sanity shows SAN only. */
@@ -43,9 +46,9 @@ const LAYOUTS = Object.freeze(["flyout", "replace"]);
 const registered = new Map();
 
 /**
- * Plug a menu into the panel. Called once by each menu part (check-menu, sanity-menu, item-menu,
+ * Plug a menu into the panel. Called once by each menu part (check-menu, sanity-menu, other-menu,
  * opposed-roll, assist) from its own register…() function. Registering an id again replaces the earlier one.
- * @param {"check"|"sanity"|"item"|"opposed"|"assist"} id which button opens it
+ * @param {"check"|"sanity"|"other"|"opposed"|"assist"} id which button opens it
  * @param {object} menu
  * @param {string} [menu.title] heading of the flyout; defaults to the host's title for that id
  * @param {(body: HTMLElement, context: {actors: Actor[], close: () => void, selectionChanged: boolean,
@@ -54,6 +57,9 @@ const registered = new Map();
  *   (`selectionChanged` false) and again when the selection changes while it is open (`selectionChanged`
  *   true), so it must build from scratch each time; a menu may carry its own choices over on a redraw.
  *   `cardChanged()`: the menu's `columns` may give something new, so the names card is drawn again.
+ *   `start`: the starting state it was opened with (`open(id, start)`), or undefined. `setTitle(text)`: the flyout's
+ *   heading for now (Other's section). It may return a controller `{ apply(start) }`, which takes a new starting
+ *   state while the menu stays open.
  * @param {"flyout"|"replace"} [menu.layout] "flyout" (default): the body is the flyout's, under its title.
  *   "replace": the body takes the place of the card, with no title of the host's, and the button column
  *   hides; `close()` brings the card and the buttons back.
@@ -96,6 +102,8 @@ export class MenuHost {
     this.ids = [];
     this.actors = [];
     this.openId = null;
+    /** What the open menu's render returned, for `open(id, start)` while it is open. */
+    this.controller = null;
   }
 
   /**
@@ -137,16 +145,35 @@ export class MenuHost {
     else this.open(id);
   }
 
-  open(id) {
-    if (!this.ids.includes(id)) return;
+  /**
+   * Open a menu, optionally with a starting state (a click on the mini sheet: a characteristic ticked, Other on its
+   * Luck section, a send). A menu already open takes the state through its controller, keeping what the Keeper set;
+   * one without a controller is drawn again with it.
+   * @param {string} id
+   * @param {object} [start]
+   * @returns {boolean} false when the menu isn't offered for this selection.
+   */
+  open(id, start) {
+    if (!this.ids.includes(id)) return false;
+    if (start && this.openId === id && typeof this.controller?.apply === "function") {
+      try {
+        this.controller.apply(start);
+      } catch (error) {
+        warn(`the ${MENUS[id].label} menu failed to take its starting state.`, error);
+      }
+      this.onCardChange();
+      return true;
+    }
     this.openId = id;
     this.markPressed();
-    this.drawMenu();
+    this.drawMenu(false, start);
     this.onCardChange();
+    return true;
   }
 
   close() {
     this.openId = null;
+    this.controller = null;
     this.markPressed();
     this.flyout.hidden = true;
     this.flyout.replaceChildren();
@@ -194,26 +221,42 @@ export class MenuHost {
    * The open menu: in place of the card for a "replace" menu, otherwise in the flyout.
    * @param {boolean} [selectionChanged] drawn again because the selection changed while it was open
    */
-  drawMenu(selectionChanged = false) {
+  drawMenu(selectionChanged = false, start = undefined) {
     const menu = registered.get(this.openId);
-    if (menu?.layout === "replace") this.drawStage(menu, selectionChanged);
-    else this.drawFlyout(menu, selectionChanged);
+    this.controller = null;
+    if (menu?.layout === "replace") this.drawStage(menu, selectionChanged, start);
+    else this.drawFlyout(menu, selectionChanged, start);
+  }
+
+  /** The render's context: the selection, close, whether the selection changed, the start, and the card's redraw. */
+  context(selectionChanged, start, setTitle = () => {}) {
+    return { actors: [...this.actors], close: () => this.close(), selectionChanged, start, setTitle,
+      cardChanged: () => this.onCardChange() };
+  }
+
+  /** Keep what a render returned when it is a controller. */
+  keep(returned) {
+    this.controller = returned && typeof returned.apply === "function" ? returned : null;
   }
 
   /** The flyout: its title, then the registered menu's content (or nothing yet). */
-  drawFlyout(menu, selectionChanged = false) {
+  drawFlyout(menu, selectionChanged = false, start = undefined) {
     const id = this.openId;
     this.leaveStage();
     const title = menu?.title ?? MENUS[id].title;
     const body = element("div", "rollbox-flyout-body");
+    const heading = element("h3", "rollbox-flyout-title", title);
+    const setTitle = (text) => {
+      heading.textContent = text;
+      this.flyout.setAttribute("aria-label", text);
+    };
     this.flyout.dataset.menu = id;
     this.flyout.setAttribute("aria-label", title);
-    this.flyout.replaceChildren(element("h3", "rollbox-flyout-title", title), body);
+    this.flyout.replaceChildren(heading, body);
     this.flyout.hidden = false;
     if (!menu) return;
     try {
-      menu.render(body, { actors: [...this.actors], close: () => this.close(), selectionChanged,
-        cardChanged: () => this.onCardChange() });
+      this.keep(menu.render(body, this.context(selectionChanged, start, setTitle)));
     } catch (error) {
       warn(`the ${MENUS[id].label} menu failed to draw.`, error);
     }
@@ -223,7 +266,7 @@ export class MenuHost {
    * A "replace" menu: the card and the button column hide and the menu fills the stage in the card's place.
    * If it fails to draw, it closes, so the Keeper is never left without the card and the buttons.
    */
-  drawStage(menu, selectionChanged = false) {
+  drawStage(menu, selectionChanged = false, start = undefined) {
     const id = this.openId;
     this.flyout.hidden = true;
     this.flyout.replaceChildren();
@@ -234,8 +277,7 @@ export class MenuHost {
     this.stage.replaceChildren();
     this.stage.hidden = false;
     try {
-      menu.render(this.stage, { actors: [...this.actors], close: () => this.close(), selectionChanged,
-        cardChanged: () => this.onCardChange() });
+      this.keep(menu.render(this.stage, this.context(selectionChanged, start)));
     } catch (error) {
       warn(`the ${MENUS[id].label} menu failed to draw.`, error);
       this.close();

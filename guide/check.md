@@ -2,14 +2,14 @@
 
 [← Back to the guide](README.md)
 
-Ask a character for any check: a characteristic, Luck, Sanity, Idea, Know or a skill.
+Ask a character for any characteristic or skill check. Luck is in the [Other](other.md) menu and Sanity has its own [Sanity](sanity.md) menu.
 
 *[Animation: requesting a Hard Spot Hidden check from a player — coming soon]*
 
 ## Making a check
 
 1. Select the character's token and click **Check**.
-2. Pick a tab: **Characteristic** (STR, CON, SIZ, DEX, APP, INT, POW, EDU), **Attribute** (Luck, Sanity, Idea, Know) or **Skill**.
+2. Pick a tab: **Characteristic** (STR, CON, SIZ, DEX, APP, INT, POW, EDU) or **Skill**.
 3. Tick the check you want.
 4. Choose the **difficulty** and any **bonus or penalty dice**, and switch on **Blind** if you like.
 5. Add a **label** if you want to tell the player why they're rolling.
@@ -36,9 +36,10 @@ The label appears after the check's name, so the player knows what's going on: *
 
 ## Idea and Know
 
-On the **Attribute** tab, **Idea** is an INT roll and **Know** an EDU roll, as in the Keeper Rulebook (p. 90). The player's request names Idea or Know.
+An **Idea** roll is an INT roll and a **Know** roll an EDU roll, as in the Keeper Rulebook (p. 90). Tick **INT** or **EDU** and type *Idea* or *Know* in the **Label** box, so the player's request says which it is.
 
 ## Good to know
 
 - There's no "pushed" option: if a roll fails and the player justifies a push, they push it from the **Push** button on the system's result card. Luck and Sanity rolls can't be pushed (p. 84).
+- Clicking a characteristic on the [mini sheet](panel.md#clicking-the-mini-sheet) opens Check with just that one ticked.
 - Ticking two or more checks makes a [combined check](combined.md). Selecting several tokens makes a [group check](group.md).

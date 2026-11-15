@@ -9,7 +9,7 @@ Two characters pit their skills or characteristics against each other: Stealth a
 ## Making an opposed roll
 
 1. Select **exactly two** tokens and click **Opposed**. The panel shows both characters side by side.
-2. For each side, pick a characteristic, attribute (Luck, Idea, Know) or skill. The two sides can use different kinds.
+2. For each side, pick a characteristic or a skill from its two tabs. The two sides can use different kinds.
 3. Give either side up to two bonus or penalty dice if the situation favours or hinders them.
 4. Click **Create opposed card**.
 
@@ -28,3 +28,4 @@ The system's card labels its two sides attacker and defender even outside combat
 - Opposed rolls have no difficulty, because the other side's roll is the difficulty, and they can't be pushed (p. 90–92).
 - If a side's skill isn't on that character's sheet, the system adds it at its base value when the card is made; the menu warns you.
 - **Cancel** takes you back to the list of names.
+- From the mini sheet: right-click one character's characteristic, select the other character's token and right-click theirs, and Opposed opens with both sides filled in. See [Clicking the mini sheet](panel.md#clicking-the-mini-sheet).

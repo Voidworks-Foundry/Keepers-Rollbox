@@ -69,3 +69,7 @@ Selecting or deselecting tokens while it's open redraws it at once, keeping the 
 
 ## Settings
 None.
+
+## Tests
+
+`tests/assist.test.mjs`: find the test you need in [TESTS.md, assist.test.mjs](TESTS.md#assisttestmjs) and run only that.

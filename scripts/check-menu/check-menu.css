@@ -59,13 +59,12 @@
   width: 56px;
 }
 
-/* The combined roll and group Luck buttons, as narrow as the Difficulty and Dice rows (shared.css). */
+/* The combined roll buttons, as narrow as the Difficulty and Dice rows (shared.css). */
 .rollbox-panel .rollbox-check-options .rollbox-segment {
   padding: 3px 2px;
 }
 
-.rollbox-panel .rollbox-check-other,
-.rollbox-panel .rollbox-check-group {
+.rollbox-panel .rollbox-check-other {
   display: flex;
   flex-direction: column;
   gap: 5px;

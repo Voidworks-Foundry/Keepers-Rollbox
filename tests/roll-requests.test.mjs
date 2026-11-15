@@ -204,14 +204,6 @@ test("label: the check's name, then the Keeper's text; HTML in labels and names 
   assert.match(env.chat[1].content, /\]\{Hard Spot Hidden \+ Listen · notice the knife\} roll\.$/);
 });
 
-test("Idea and Know for a player: an INT or EDU check labelled Idea or Know", async () => {
-  const { env } = setup();
-  await RR.send(RR.checkRequest({ checks: [{ kind: "attribute", name: "idea" }] }), [pc()]);
-  await RR.send(RR.checkRequest({ checks: [{ kind: "attribute", name: "know" }], label: "Recall the cult" }), [pc()]);
-  assert.match(env.chat[0].content, /subtype:characteristic,name:int,.*\]\{Idea\} roll/);
-  assert.match(env.chat[1].content, /subtype:characteristic,name:edu,.*\]\{Know · Recall the cult\} roll/);
-});
-
 test("combined for a player: one combined link, all or any, no actor in the roll strings", async () => {
   const { env } = setup();
   const alice = pc({ skills: [spot, listen] });
@@ -312,17 +304,6 @@ test("NPC typed skill: the Keeper's value, else the group base; no value at all 
   assert.deepEqual(guard.calls.map((c) => c[1].threshold), [40, 10]);
   assert.equal(result.skipped[0].reason, "no value to roll at");
   assert.equal(calls.notices.length, 1);
-});
-
-test("NPC Idea and Know: CoC7's own Idea and Know rolls, dice in their own option", async () => {
-  setup();
-  const guard = npc();
-  await RR.send(RR.checkRequest({ checks: [{ kind: "attribute", name: "idea" }], dice: 1 }), [guard]);
-  await RR.send(RR.checkRequest({ checks: [{ kind: "attribute", name: "know" }], difficulty: "hard" }), [guard]);
-  assert.deepEqual(guard.calls, [
-    ["runRoll", { characteristic: "idea", difficulty: 1, poolModifierIdea: 1, isBlind: true, fastForward: true }],
-    ["runRoll", { characteristic: "know", difficulty: 2, poolModifierKnow: 0, isBlind: true, fastForward: true }]
-  ]);
 });
 
 test("NPC combined: one private roll at the highest (any) or lowest (all) value, named in a note", async () => {
@@ -504,11 +485,11 @@ test("opposed: one CoC7 card with both sides, regular difficulty, dice; Start ro
   assert.deepEqual(env.hooks.renderChatMessageHTML, []);
 });
 
-test("opposed: Idea becomes an INT side; the Keeper is told when Start rolls can't be clicked", async () => {
+test("opposed: the Keeper is told when Start rolls can't be clicked", async () => {
   const { env, calls } = setup();
   const alice = pc(); const guard = npc();
   await RR.send(RR.opposedRequest({ sides: [
-    { actor: alice, check: { kind: "attribute", name: "idea" } },
+    { actor: alice, check: { kind: "characteristic", name: "int" } },
     { actor: guard, check: { kind: "characteristic", name: "pow" }, dice: -1 }] }));
   assert.equal(calls.linkActorClick[0].options.rolls, "Actor.Alice#characteristic#int#1&&Actor.Guard#characteristic#pow#-1#1");
   renderCard(env, { as: "CoC7ChatOpposedMessage", actorUuids: ["Actor.Alice", "Actor.Guard"] }, { button: false });

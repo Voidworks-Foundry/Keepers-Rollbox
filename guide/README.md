@@ -7,6 +7,6 @@
 - [Combined checks](combined.md)
 - [Group checks](group.md)
 - [Sanity](sanity.md)
-- [Item](item.md)
+- [Other: Item and Luck](other.md)
 - [Opposed rolls](opposed.md)
 - [Assist](assist.md)

@@ -1,5 +1,5 @@
 /**
- * Menu helpers every menu uses (Check, Sanity, Item, Opposed, Assist): buttons, a row of buttons where one is
+ * Menu helpers every menu uses (Check, Sanity, Other, Opposed, Assist): buttons, a row of buttons where one is
  * pressed, the check tabs and their skill search, the Difficulty / Dice / Blind rows, the "60 · 30 · 12" values,
  * the main send button's words, and the Send flow with its result lines. Built with textContent only, so names typed by anyone never become HTML. Their look is shared.css's
  * generic classes (`rollbox-btn`, `rollbox-segment`, `rollbox-line`, `rollbox-input`, …).
@@ -30,10 +30,12 @@ export function textInput(className, placeholder, ariaLabel) {
   return node;
 }
 
-/** The three tabs of the Check menu and of each Opposed side; their rows are skill-values' checkChoices(). */
+/**
+ * The two tabs of the Check menu and of each Opposed side; their rows are skill-values' checkChoices(). No Attribute
+ * tab (Void, 2026-11-15): Luck is the Other menu's, Sanity has its own, Idea and Know are INT and EDU checks.
+ */
 export const CHECK_TABS = Object.freeze([
   { id: "characteristic", label: "Characteristic" },
-  { id: "attribute", label: "Attribute" },
   { id: "skill", label: "Skill" }
 ]);
 

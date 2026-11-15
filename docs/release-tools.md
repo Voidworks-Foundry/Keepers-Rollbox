@@ -48,7 +48,7 @@ The zip is made and read with `fflate` (MIT, no dependencies of its own), a dev 
 
 ### `debugLeftovers(moduleDir, manifest)`
 - **How it works:** every `.js` / `.mjs` file in `shippedFiles()` (Rollbox: `scripts/`), comments blanked by `codeLines()`; reports `path:line: console.log left in` for `console.log(` and `path:line: debugger left in` for the word `debugger`.
-- **Connects to:** CLAUDE.md's rule "No `console.log` or `debugger` left in `scripts/`".
+- **Connects to:** AGENTS.md's rule: no `console.log` or `debugger` in `scripts/`.
 - **Could interact poorly with:** the word `debugger` inside a string would be reported (no such string in Rollbox).
 
 ### `changelogProblems(moduleDir, version)`
@@ -86,4 +86,4 @@ None. Runs in Node, never in Foundry.
 None.
 
 ## Tests
-`tests/release-tools.test.mjs` builds a small made-up module (`test-module` 1.2.3) in a temp folder, with `tests/`, `docs/`, `tools/`, `package.json`, `package-lock.json` and `node_modules/` beside `scripts/`, and checks: the package leaves all of those out; smoke passes on the packaged zip and fails on `tests/` or `docs/` inside, a missing listed script, a missing imported script, a missing template, a wrong top folder, a zip name not matching the version, and a syntax error; release-check passes on the good module, builds a fresh zip first (a syntax error added after an earlier package is caught), and fails on a `console.log` or `debugger` in `scripts/`, on a newest changelog entry that isn't the version, and on the version appearing twice.
+`tests/release-tools.test.mjs` builds a small made-up module (`test-module` 1.2.3) in a temp folder, with `tests/`, `docs/`, `tools/`, `package.json`, `package-lock.json` and `node_modules/` beside `scripts/`, and checks: the package leaves all of those out; smoke passes on the packaged zip and fails on `tests/` or `docs/` inside, a missing listed script, a missing imported script, a missing template, a wrong top folder, a zip name not matching the version, and a syntax error; release-check passes on the good module, builds a fresh zip first (a syntax error added after an earlier package is caught), and fails on a `console.log` or `debugger` in `scripts/`, on a newest changelog entry that isn't the version, and on the version appearing twice. Find the test you need in [TESTS.md, release-tools.test.mjs](TESTS.md#release-toolstestmjs) and run only that.

@@ -1,13 +1,11 @@
 /**
- * Item menu: what the Keeper's Item button opens, for one selected character. The Keeper picks one of the
+ * The Other menu's Item section (the Item menu until 0.1.1), for one selected character. The Keeper picks one of the
  * character's weapons (one row per skill it uses) or names an improvised weapon with its skill and optional
  * damage, sets the difficulty, dice and Blind, and sends it through roll-requests/ as an ordinary skill check
  * labelled with the weapon, never CoC7's weapon link (which starts its attack card and ignores the options).
- * For weapon rolls with no token to target, such as shooting a lock. Layout and rules: DESIGN.md, "Item menu".
- * Keeper only: registered only on the Keeper's client.
+ * For weapon rolls with no token to target, such as shooting a lock. Layout and rules: DESIGN.md, "Other menu".
  */
-import { NO_VALUE, element, getSetting, isKeeper, warn } from "../utils.js";
-import { registerMenu } from "../mini-sheet/index.js";
+import { NO_VALUE, element, warn } from "../utils.js";
 import { findSkillRow, sameSkill, skills } from "../skill-values/index.js";
 import { damageText, improvisedRequest, send, weaponRequest, weaponSkills } from "../roll-requests/index.js";
 import {
@@ -38,23 +36,12 @@ const MISSING = Object.freeze({
 let menuCount = 0;
 
 /**
- * ready: plug the Item menu into the Keeper's panel. Does nothing for players or with the Rollbox
- * switch off (the panel isn't there either).
- * @returns {boolean} true when the menu was registered.
+ * The Item section, built from scratch for the selected character. One character only: with any other number the
+ * Other menu greys the section out, and this draws nothing.
+ * @param {HTMLElement} body the section's place, already empty
+ * @param {Actor[]} actors the selected characters
  */
-export function registerItemMenu() {
-  if (!isKeeper() || !getSetting("rollboxEnabled")) return false;
-  return registerMenu("item", { title: "Item check", render: renderItemMenu });
-}
-
-/**
- * The menu host's render: builds the whole menu from scratch for the selected character. Called when the
- * menu opens and again when the selection changes while it is open. One character only: the host offers
- * the Item button only then, and anything else draws nothing.
- * @param {HTMLElement} body the flyout's body, already empty
- * @param {{actors: Actor[]}} context the selected characters
- */
-export function renderItemMenu(body, { actors = [] } = {}) {
+export function renderItem(body, actors = []) {
   if (actors.length !== 1 || !actors[0]) return;
   new ItemMenu(body, actors[0]).build();
 }

@@ -3,6 +3,7 @@
  * occupation and owner, HP, MP, SAN, Luck, the eight characteristics, and a button to the full sheet), and
  * the names card for two or more (each character's name, owner or "NPC · Keeper rolls", and value columns
  * that follow the open menu: SAN and Luck, SAN alone with Sanity, STR or SIZ with Assist).
+ * On the panel's own mini sheet, each characteristic, SAN and Luck is a button (Void, 2026-11-15; sheet-clicks.js).
  * Built with textContent only, so names and occupations typed by anyone never become HTML.
  * Every value is read guarded: a missing field shows a dash.
  */
@@ -44,9 +45,31 @@ function portrait(actor, className) {
   return img;
 }
 
-/** One stat with a thin bar under it. `max` null: no bar fill. */
-function bar(key, label, value, max) {
-  const box = element("div", `rollbox-stat rollbox-stat-${key}`);
+/**
+ * A value as a button, when the mini sheet is the panel's own: a left click and a right click (whose browser menu is
+ * kept away) both go to `onValue` with the value and the event. Its aria-label names what it opens; no tooltip.
+ */
+function valueButton(node, value, ariaLabel, onValue) {
+  node.setAttribute("aria-label", ariaLabel);
+  node.dataset.value = value.key ?? value.kind;
+  node.addEventListener("click", (event) => onValue(event, value, false));
+  node.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    onValue(event, value, true);
+  });
+  return node;
+}
+
+/** A button that never submits anything, or a plain box when the mini sheet isn't clickable. */
+function cellOf(tag, className) {
+  const node = element(tag, className);
+  if (tag === "button") node.type = "button";
+  return node;
+}
+
+/** One stat with a thin bar under it. `max` null: no bar fill. `tag` "button" for SAN and Luck on the panel's sheet. */
+function bar(key, label, value, max, tag = "div") {
+  const box = cellOf(tag, `rollbox-stat rollbox-stat-${key}`);
   const line = element("div", "rollbox-stat-line");
   line.append(element("span", "rollbox-stat-label", label), element("span", "rollbox-stat-value", value));
   const track = element("div", "rollbox-stat-bar");
@@ -67,8 +90,15 @@ function current(attrib) {
   return { text: max === null ? String(value) : `${value}/${max}`, max };
 }
 
-/** The mini sheet for one character. */
-export function miniSheet(actor) {
+/**
+ * The mini sheet for one character.
+ * @param {Actor} actor
+ * @param {{onValue?: (event: MouseEvent, value: {kind: string, key?: string}, right: boolean) => void}} [options]
+ *   `onValue`: the panel's own sheet; its characteristics, SAN and Luck become buttons (HP and MP stay plain).
+ *   Without it (the Opposed view's sheets, the invisible copy under the names card) nothing is clickable.
+ */
+export function miniSheet(actor, { onValue } = {}) {
+  const tag = typeof onValue === "function" ? "button" : "div";
   const card = element("section", "rollbox-card rollbox-sheet");
   card.setAttribute("aria-label", `${actor.name ?? ""} mini sheet`);
 
@@ -97,17 +127,19 @@ export function miniSheet(actor) {
   const mp = current(attribs?.mp);
   const sanMax = numberOrNull(san?.max) ?? PERCENT_MAX;
   const stats = element("div", "rollbox-stats");
-  stats.append(
-    bar("hp", "HP", hp.text, hp.max),
-    bar("mp", "MP", mp.text, mp.max),
-    bar("san", "SAN", san?.value ?? NO_VALUE, sanMax),
-    bar("luck", "Luck", luck?.value ?? NO_VALUE, PERCENT_MAX)
-  );
+  const sanBox = bar("san", "SAN", san?.value ?? NO_VALUE, sanMax, tag);
+  const luckBox = bar("luck", "Luck", luck?.value ?? NO_VALUE, PERCENT_MAX, tag);
+  if (tag === "button") {
+    valueButton(sanBox, { kind: "san" }, "Sanity", onValue);
+    valueButton(luckBox, { kind: "luck" }, "Luck", onValue);
+  }
+  stats.append(bar("hp", "HP", hp.text, hp.max), bar("mp", "MP", mp.text, mp.max), sanBox, luckBox);
 
   const chars = element("div", "rollbox-characteristics");
   for (const { key, label, value } of characteristics(actor)) {
-    const cell = element("div", "rollbox-characteristic");
+    const cell = cellOf(tag, "rollbox-characteristic");
     cell.dataset.key = key;
+    if (tag === "button") valueButton(cell, { kind: "characteristic", key }, `Check ${label}`, onValue);
     cell.append(element("span", "rollbox-characteristic-label", label),
       element("span", "rollbox-characteristic-value", value ?? NO_VALUE));
     chars.append(cell);

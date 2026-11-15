@@ -120,11 +120,22 @@ test("ties: the higher value is named for the Keeper; equal values are a stalema
   assert.match(m.text(".rollbox-opposed-tie"), /stalemate/);
 });
 
-test("Attribute tab: Luck, Idea and Know, no Sanity", () => {
+test("each side picks from two tabs, Characteristic and Skill (no Attribute tab)", () => {
   setup();
   const m = open([pc(), npc()]);
-  m.tab(0, "Attribute");
-  assert.deepEqual(m.within(0, ".rollbox-opposed-row-name").map((n) => n.textContent), ["Luck", "Idea (INT)", "Know (EDU)"]);
+  assert.deepEqual(m.within(0, ".rollbox-opposed-tab").map((n) => n.textContent), ["Characteristic", "Skill"]);
+});
+
+test("started from the mini sheet: the first character on the left with both picks; create makes the card at once", async () => {
+  const { calls } = setup();
+  const alice = pc(); const guard = npc();
+  const stage = document.createElement("div");
+  document.body.append(stage);
+  renderOpposedRoll(stage, { actors: [alice, guard], start: { first: guard.uuid,
+    picks: { [guard.uuid]: "characteristic:pow", [alice.uuid]: "characteristic:str" }, create: true } });
+  await settle();
+  assert.equal(stage.querySelector(".rollbox-opposed-side .rollbox-opposed-name").textContent, "Guard");
+  assert.equal(calls.linkActorClick[0].options.rolls, "Actor.Guard#characteristic#pow#1&&Actor.Alice#characteristic#str#1");
 });
 
 test("Swap sides: the characters change places with their picks and dice, so the other is CoC7's first side", async () => {

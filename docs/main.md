@@ -17,11 +17,15 @@ The module's only entry point (`esmodules` in `module.json`). It holds wiring on
 - **Could interact poorly with:** other modules that restyle or reshuffle the settings page; Foundry changing the form markup (`.form-group`, `.hint`) or passing an `html` that isn't an `HTMLElement` (the function then does nothing). In v14 `SettingsConfig` is an ApplicationV2 (through `CategoryBrowser`), per the v14 API docs; the hook's exact arguments weren't on the pages read. The same hook and handler work in `void-coc7-modules` 1.0.10 on v14. **Assumed** for Rollbox until Void sees the heading.
 
 ### `Hooks.once("ready", …)`
-- **How it works:** Calls `registerMiniSheet()`, then `registerCheckMenu()`, `registerSanityMenu()`, `registerItemMenu()`, `registerOpposedRoll()` and `registerAssist()`; each does nothing unless this user is the Keeper and the Rollbox switch is on. The panel registers first, so the menus have a host to plug into. `roll-requests/` installs nothing at `ready`: it works only when a menu sends.
-- **Connects to:** `mini-sheet/index.js`, `check-menu/index.js`, `sanity-menu/index.js`, `item-menu/index.js`, `opposed-roll/index.js`, `assist/index.js`.
-- **Could interact poorly with:** nothing itself; the parts' interactions are in `docs/mini-sheet.md`, `docs/check-menu.md`, `docs/sanity-menu.md`, `docs/item-menu.md`, `docs/opposed-roll.md` and `docs/assist.md`. **Assumed.**
+- **How it works:** Calls `registerMiniSheet()`, then `registerCheckMenu()`, `registerSanityMenu()`, `registerOtherMenu()`, `registerOpposedRoll()` and `registerAssist()`; each does nothing unless this user is the Keeper and the Rollbox switch is on. The panel registers first, so the menus have a host to plug into. `roll-requests/` installs nothing at `ready`: it works only when a menu sends.
+- **Connects to:** `mini-sheet/index.js`, `check-menu/index.js`, `sanity-menu/index.js`, `other-menu/index.js`, `opposed-roll/index.js`, `assist/index.js`.
+- **Could interact poorly with:** nothing itself; the parts' interactions are in `docs/mini-sheet.md`, `docs/check-menu.md`, `docs/sanity-menu.md`, `docs/other-menu.md`, `docs/opposed-roll.md` and `docs/assist.md`. **Assumed.**
 
 ## Hooks, overrides, keybindings
 - Hooks: `init` (once), `renderSettingsConfig`, `ready` (once).
 - Class overrides: none.
 - Keybindings: none.
+
+## Tests
+
+`tests/mini-sheet.test.mjs` (the tests named `main.js calls…`, `player: does nothing…` and `Keeper with the switch off…`): find the test you need in [TESTS.md, mini-sheet.test.mjs](TESTS.md#mini-sheettestmjs) and run only that.

@@ -35,11 +35,6 @@ function rawRoll(threshold, plan) {
 function oneRoll(actor, check, plan, notes) {
   const difficulty = difficultyLevel(plan.difficulty);
   const options = { difficulty, poolModifier: plan.dice, blind: true };
-  if (check.ideaKnow) {
-    // CoC7's own Idea or Know card; its dice option has its own name (`CoC7RollNormalize.normalizeRequest`).
-    const dice = check.ideaKnow === "idea" ? { poolModifierIdea: plan.dice } : { poolModifierKnow: plan.dice };
-    return { method: "runRoll", args: [{ characteristic: check.ideaKnow, difficulty, ...dice, isBlind: true, fastForward: true }] };
-  }
   if (check.kind === "characteristic") return { method: "characteristicCheck", args: [check.key, true, options] };
   if (check.kind === "attribute") return { method: "attributeCheck", args: [check.key, true, options] };
   if (check.onSheet) return { method: "skillCheck", args: [check.uuid ?? check.key, true, options] };

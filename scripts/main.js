@@ -7,7 +7,7 @@ import { registerSettings, decorateSettingsConfig } from "./settings.js";
 import { registerMiniSheet } from "./mini-sheet/index.js";
 import { registerCheckMenu } from "./check-menu/index.js";
 import { registerSanityMenu } from "./sanity-menu/index.js";
-import { registerItemMenu } from "./item-menu/index.js";
+import { registerOtherMenu } from "./other-menu/index.js";
 import { registerOpposedRoll } from "./opposed-roll/index.js";
 import { registerAssist } from "./assist/index.js";
 
@@ -21,7 +21,7 @@ Hooks.once("ready", () => {
   registerMiniSheet();
   registerCheckMenu();
   registerSanityMenu();
-  registerItemMenu();
+  registerOtherMenu();
   registerOpposedRoll();
   registerAssist();
 });

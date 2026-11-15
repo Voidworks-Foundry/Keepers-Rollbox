@@ -1,8 +1,8 @@
 {
   "id": "keepers-rollbox",
   "title": "Keeper's Rollbox",
-  "description": "Keeper panel for the selected tokens: request checks, combined checks, Sanity checks, item checks, opposed rolls and assisted STR or SIZ efforts through CoC7's own roll links.",
-  "version": "0.1.0",
+  "description": "Keeper panel for the selected tokens: request checks, combined checks, Sanity checks, Luck and item checks, opposed rolls and assisted STR or SIZ efforts through CoC7's own roll links.",
+  "version": "0.1.1",
   "authors": [
     {
       "name": "Void"
@@ -34,13 +34,15 @@
   ],
   "styles": [
     "scripts/mini-sheet/mini-sheet.css",
+    "scripts/mini-sheet/position.css",
+    "scripts/mini-sheet/sheet-values.css",
     "scripts/shared/shared.css",
     "scripts/check-menu/check-menu.css",
     "scripts/sanity-menu/sanity-menu.css",
-    "scripts/item-menu/item-menu.css",
+    "scripts/other-menu/other-menu.css",
     "scripts/opposed-roll/opposed-roll.css",
     "scripts/assist/assist.css"
   ],
-  "manifest": "https://github.com/Voidworks-Foundry/keepers-rollbox/releases/download/v0.1.0/module.json",
-  "download": "https://github.com/Voidworks-Foundry/keepers-rollbox/releases/download/v0.1.0/keepers-rollbox-v0.1.0.zip"
+  "manifest": "https://github.com/Voidworks-Foundry/keepers-rollbox/releases/download/v0.1.1/module.json",
+  "download": "https://github.com/Voidworks-Foundry/keepers-rollbox/releases/download/v0.1.1/keepers-rollbox-v0.1.1.zip"
 }

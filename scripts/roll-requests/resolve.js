@@ -9,9 +9,7 @@ import {
 } from "../skill-values/index.js";
 import { checkLink, cleanLabel, combinedLink, isSafeOption, isSafeRollKey, rollString } from "./links.js";
 
-/** Idea and Know are INT and EDU rolls with their own names (Keeper Rulebook p. 90). */
-const IDEA_KNOW = Object.freeze({ idea: { characteristic: "int", label: "Idea" }, know: { characteristic: "edu", label: "Know" } });
-const ATTRIBUTE_LABELS = Object.freeze({ lck: "Luck", san: "Sanity" });
+const ATTRIBUTE_LABELS = Object.freeze({ lck: "Luck" });
 /** Damage formulas, once the damage bonus is filled in, may hold only dice and arithmetic. */
 const DICE_FORMULA = /^[0-9dD+\-*/() ]+$/;
 /** How a label or the Keeper's note names a difficulty in front of the check; Regular and Hidden add nothing. */
@@ -56,10 +54,6 @@ export function resolveCheck(actor, check) {
   }
   if (check.kind === "skill") return resolveSkill(actor, check);
   const value = attributes(actor).find((a) => a.key === check.name)?.value ?? null;
-  if (IDEA_KNOW[check.name]) {
-    const { characteristic, label } = IDEA_KNOW[check.name];
-    return { kind: "characteristic", display: label, key: characteristic, ideaKnow: check.name, value };
-  }
   return { kind: "attribute", display: ATTRIBUTE_LABELS[check.name], key: check.name, value };
 }
 
@@ -170,7 +164,7 @@ export function planCheck(request, actor) {
     const checks = request.checks.map((check) => resolveCheck(actor, check));
     const joiner = request.all ? " and " : " or ";
     const label = request.label ? keeperLabel(checks, request.difficulty, request.label)
-      : (request.combined ? cleanLabel(checks.map((c) => c.display).join(joiner)) : (checks[0].ideaKnow ? checks[0].display : ""));
+      : (request.combined ? cleanLabel(checks.map((c) => c.display).join(joiner)) : "");
     // Only a label with the Keeper's own text goes in an NPC's note; the made-up ones are already on CoC7's card.
     return { ...base, checks, combined: request.combined, all: request.all, label, note: request.label ? label : null };
   }

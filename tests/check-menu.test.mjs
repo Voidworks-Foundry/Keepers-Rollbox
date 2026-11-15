@@ -21,10 +21,10 @@ const npc = (options = {}) => makeRollActor({ name: "Guard", type: "npc", owners
   luck: 30, san: 40, ...options });
 
 /** The Check menu drawn for these characters, with helpers to use it like the Keeper. */
-function open(actors) {
+function open(actors, start) {
   const body = document.createElement("div");
   document.body.append(body); // jsdom fires a checkbox's change on click only when it is in the document
-  renderCheckMenu(body, { actors });
+  const controller = renderCheckMenu(body, { actors, start });
   const all = (selector) => [...body.querySelectorAll(selector)];
   const byText = (selector, text) => all(selector).find((node) => node.textContent === text);
   const row = (name) => all(".rollbox-check-row").find((node) => node.querySelector(".rollbox-check-name").textContent === name);
@@ -47,7 +47,10 @@ function open(actors) {
   const copyLink = () => body.querySelector(".rollbox-check-link").click();
   const sendsDisabled = () => all(".rollbox-check-action").every((node) => node.disabled);
   const result = () => resultText(body.querySelector(".rollbox-result"));
-  return { body, all, row, tick, press, tab, type, visibleNames, text, blind, copyLink, sendsDisabled, result };
+  const ticked = () => all(".rollbox-check-row input:checked").map((box) => box.closest(".rollbox-check-row")
+    .querySelector(".rollbox-check-name").textContent);
+  return { body, all, row, tick, press, tab, type, visibleNames, text, blind, copyLink, sendsDisabled, result, ticked,
+    controller };
 }
 
 /** Let send() finish: it awaits CoC7's lookups and ChatMessage.create. */
@@ -63,11 +66,12 @@ test("registerCheckMenu: only on the Keeper's client with the Rollbox switch on"
   assert.deepEqual(env.reads, ["rollboxEnabled"]);
 });
 
-test("one character: values, Idea and Know, trained skills first, a divider, the rest at base value; search filters", () => {
+test("one character: two tabs (no Attribute), values, trained skills first, a divider, the rest at base value; search filters", () => {
   setup();
   const m = open([pc({ skills: [spot, { name: "Climb", value: 20, cocid: "i.skill.climb" }] })]);
+  assert.deepEqual(m.all(".rollbox-check-tab").map((n) => n.textContent), ["Characteristic", "Skill"]);
   assert.equal(m.row("STR").querySelector(".rollbox-check-values").textContent, "50 · 25 · 10");
-  assert.deepEqual(m.visibleNames("attribute"), ["Luck", "Sanity", "Idea (INT)", "Know (EDU)"]);
+  assert.equal(m.row("Luck"), undefined);
   const skillList = m.all('.rollbox-check-panel[data-tab="skill"] .rollbox-check-list > :not(.rollbox-check-add)');
   assert.equal(skillList[0].textContent.startsWith("Spot Hidden"), true);
   assert.ok(skillList[1].classList.contains("rollbox-check-divider"));
@@ -147,29 +151,6 @@ test("several characters: skills A–Z without values; Send to each (N); players
   assert.deepEqual(m.result(), ["Check sent to:", "Alice", "Bob", "Rolled for you:", "Guard"]);
 });
 
-test("group Luck roll: only the lowest Luck is asked; a tie asks the Keeper to pick", async () => {
-  const { env } = setup();
-  const alice = pc({ luck: 45 }); const bob = pc({ name: "Bob", owners: [game.users[2]], luck: 35 });
-  let m = open([alice, bob]);
-  m.tick("Luck");
-  m.body.querySelector(".rollbox-check-group input").click();
-  m.press("Request from player"); await settle();
-  assert.equal(env.chat.length, 1);
-  assert.match(env.chat[0].content, /requested Bob make/);
-
-  const carol = pc({ name: "Carol", luck: 35, uuid: "Actor.Carol" });
-  m = open([alice, bob, carol]);
-  m.tick("Luck");
-  m.body.querySelector(".rollbox-check-group input").click();
-  assert.equal(m.sendsDisabled(), true); // a tie: nobody picked yet
-  assert.equal(m.text(".rollbox-status"), "Pick who rolls for the group.");
-  m.press("Carol");
-  assert.equal(m.sendsDisabled(), false);
-  m.press("Request from player"); await settle();
-  assert.match(env.chat[1].content, /requested Carol make/);
-  assert.equal(env.chat.length, 2);
-});
-
 test("main button: \"Roll for NPC(s)\" when every character is an NPC; with a player character, as before", async () => {
   setup();
   const words = (actors) => open(actors).body.querySelector(".rollbox-primary").textContent;
@@ -208,12 +189,38 @@ test("+ Add: a search that matches no listed skill offers the typed name; a spec
 test("Send to chat posts publicly; Copy link copies and sends nothing", async () => {
   const { env, calls } = setup();
   const m = open([pc()]);
-  m.tab("Attribute"); m.tick("Idea (INT)");
+  m.tick("INT"); m.type(".rollbox-check-label-input", "Idea");
   m.press("Send to chat"); await settle();
   assert.equal("whisper" in env.chat[0], false);
-  assert.match(env.chat[0].content, /name:int,.*\{Idea\}/);
+  assert.match(env.chat[0].content, /name:int,.*\{INT · Idea\}/);
   m.copyLink(); await settle();
   assert.equal(calls.copied.length, 1);
   assert.equal(env.chat.length, 1);
+  assert.deepEqual(m.result(), ["Link copied."]);
+});
+
+test("started from the mini sheet: only that characteristic ticked; again while open switches it, keeping the options", () => {
+  setup();
+  const m = open([pc({ skills: [spot] })], { tick: "characteristic:str" });
+  assert.deepEqual(m.ticked(), ["STR"]);
+  m.tab("Skill"); m.tick("Spot Hidden"); m.press("Hard");
+  m.controller.apply({ tick: "characteristic:int" });
+  assert.deepEqual(m.ticked(), ["INT"]);
+  assert.equal(m.body.querySelector(".rollbox-check-panel[data-tab=\"characteristic\"]").hidden, false);
+  assert.equal(m.all("[aria-pressed=\"true\"]").some((b) => b.textContent === "Hard"), true);
+});
+
+test("started from the mini sheet: add keeps the ticks (combined); plain sends a Regular check at once, or copies its link", async () => {
+  const { env, calls } = setup();
+  const m = open([pc()], { tick: "characteristic:str" });
+  m.press("Hard"); m.type(".rollbox-check-label-input", "lift it");
+  m.controller.apply({ tick: "characteristic:con", add: true });
+  assert.deepEqual(m.ticked(), ["STR", "CON"]);
+  m.controller.apply({ tick: "characteristic:dex", plain: true, send: "whisper" }); await settle();
+  assert.deepEqual(m.ticked(), ["DEX"]);
+  assert.match(env.chat[0].content, /name:dex,difficulty:1,/);
+  assert.doesNotMatch(env.chat[0].content, /lift it/);
+  m.controller.apply({ tick: "characteristic:app", plain: true, send: "link" }); await settle();
+  assert.match(calls.copied[0], /name:app,difficulty:1/);
   assert.deepEqual(m.result(), ["Link copied."]);
 });

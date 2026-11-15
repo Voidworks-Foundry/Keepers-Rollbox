@@ -6,7 +6,7 @@
  * (the other side's result is the difficulty, p. 92), no push (p. 90), no Sanity. Layout and rules: DESIGN.md,
  * "Opposed roll". Keeper only: registered only on the Keeper's client.
  */
-import { NO_VALUE, element, getSetting, isKeeper } from "../utils.js";
+import { NO_VALUE, actorKey, element, getSetting, isKeeper } from "../utils.js";
 import { miniSheet, registerMenu } from "../mini-sheet/index.js";
 import { checkChoices } from "../skill-values/index.js";
 import { opposedRequest, ownersOf, send } from "../roll-requests/index.js";
@@ -37,11 +37,16 @@ export function registerOpposedRoll() {
  * The menu host's render: builds the whole view from scratch for the two selected characters. Called when
  * the Opposed button is clicked and again when the selection changes to two other characters.
  * @param {HTMLElement} stage where the view goes, in place of the names card, already empty
- * @param {{actors: Actor[], close: () => void}} context the selected characters; `close` is Cancel
+ * @param {{actors: Actor[], close: () => void, start?: {first?: string, picks?: Object<string, string>,
+ *   create?: boolean}}} context the selected characters; `close` is Cancel; `start`, from right clicks on the mini
+ *   sheet: `first` is the character (by uuid) to put on the left, CoC7's first side; `picks` each character's check
+ *   row key ("characteristic:str"); `create` makes the card at once.
  */
-export function renderOpposedRoll(stage, { actors = [], close = () => {} } = {}) {
+export function renderOpposedRoll(stage, { actors = [], close = () => {}, start } = {}) {
   if (actors.length !== 2) return;
-  new OpposedView(stage, actors, close).build();
+  const view = new OpposedView(stage, actors, close, start);
+  view.build();
+  if (start?.create) view.create();
 }
 
 // --- Small helpers -------------------------------------------------------------------------------
@@ -60,6 +65,18 @@ function whoRolls(actor) {
 }
 
 const known = (value) => value !== null && value !== undefined;
+
+/** A side's starting pick, by its row key (from a right click on the mini sheet), with that row's tab. */
+function startPick(actor, picks) {
+  const key = picks?.[actorKey(actor)];
+  if (!key) return {};
+  const choices = checkChoices(actor);
+  for (const tab of CHECK_TABS) {
+    const pick = choices[tab.id].find((row) => row.key === key);
+    if (pick) return { tab: tab.id, pick };
+  }
+  return {};
+}
 
 /**
  * The line that settles a tie (Keeper Rulebook p. 91): CoC7's card shows only "Tie" on equal success
@@ -91,12 +108,15 @@ class OpposedView {
    * @param {HTMLElement} stage
    * @param {Actor[]} actors exactly two, in selection order
    * @param {() => void} close
+   * @param {object} [start] sides and picks to start with (renderOpposedRoll)
    */
-  constructor(stage, actors, close) {
+  constructor(stage, actors, close, start) {
     this.stage = stage;
     this.close = close;
     /** One side per character: its tab, its picked check (or null), its dice and its skill search. */
-    this.sides = actors.map((actor) => ({ actor, tab: CHECK_TABS[0].id, pick: null, dice: 0, search: "" }));
+    this.sides = actors.map((actor) => ({ actor, tab: CHECK_TABS[0].id, pick: null, dice: 0, search: "",
+      ...startPick(actor, start?.picks) }));
+    if (start?.first && actorKey(this.sides[1].actor) === start.first) this.sides.reverse();
     this.sending = false;
     this.made = false;
   }
@@ -120,15 +140,15 @@ class OpposedView {
   // --- One side ---
 
   /**
-   * One side: its header, the three tabs, the skill search, the list for the open tab, the dice, and a note on a
+   * One side: its header, the two tabs, the skill search, the list for the open tab, the dice, and a note on a
    * missing skill. `index` 0 is the left-hand side, CoC7's first (attacker).
    */
   sideBlock(side, index) {
     const root = element("div", "rollbox-opposed-side");
     root.dataset.actor = side.actor.uuid ?? side.actor.name ?? "";
     root.dataset.role = ROLES[index].toLowerCase();
-    // The same rows as the Check menu's tabs, without Sanity (never opposed).
-    const block = { root, side, rows: [], choices: checkChoices(side.actor, { sanity: false }) };
+    // The same rows as the Check menu's tabs.
+    const block = { root, side, rows: [], choices: checkChoices(side.actor) };
     block.list = element("div", "rollbox-opposed-list");
     block.list.setAttribute("role", "listbox");
     block.missing = element("div", "rollbox-hint rollbox-opposed-hint", MISSING_HINT);
@@ -147,7 +167,7 @@ class OpposedView {
     return head;
   }
 
-  /** Characteristic, Attribute, Skill: a click draws that tab's list. */
+  /** Characteristic, Skill: a click draws that tab's list. */
   tabs(block) {
     const tabs = element("div", "rollbox-opposed-tabs");
     tabs.setAttribute("role", "tablist");

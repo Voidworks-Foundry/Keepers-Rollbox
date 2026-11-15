@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.1
+
+First round of table feedback.
+
+- **Move the panel** (setting "Allow moving the panel", on by default): drag it by its card header (the name row, "N selected", or either character's sheet in the Opposed view) anywhere on the screen, and it stays where you drop it, also after a reload or a smaller window. "Reset position" beside the setting, or turning it off, puts it back above the players list.
+- **Menus open to the** Right, Left, or Automatic (towards the middle of the screen). In the top half of the screen the buttons and menus line up with the card's top and open downwards; an opened menu that would run off the screen shifts the panel until it fits, and it goes back when the menu closes.
+- **Other** replaces the Item button and is there for any selection. Its two sections are **Item** (one character: weapons and improvised weapons, as before) and **Luck** (a Luck check, with the Group Luck roll for two or more: only the lowest Luck rolls, and you pick on a tie). It opens on Item for one character and on Luck for two or more.
+- **Check and Opposed have two tabs**, Characteristic and Skill. Luck is in Other, Sanity has its own menu, and Idea and Know are INT and EDU checks: type "Idea" or "Know" in the Label box.
+- **Click the mini sheet:** a characteristic opens Check with just that one ticked, SAN opens Sanity and Luck opens Other on Luck. The values take the system sheet's own click shortcuts (Shift to send at once, Ctrl to copy a link, right click for an opposed roll, Alt + right click to add to a combined check), all sent through Rollbox's menus. The guide's panel page lists them.
+- **For contributors:** `AGENTS.md` for AI coding agents, with a "Find your way" index of what to read and which tests to run for each kind of task; `CONTRIBUTING.md`; public developer and design documents, recipes and a test index (`docs/TESTS.md`). The README says openly that Rollbox is built with AI.
+
 ## 0.1.0
 
 First test release, for Foundry VTT 14 and Call of Cthulhu 7th Edition (CoC7) 8.15.

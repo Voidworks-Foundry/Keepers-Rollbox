@@ -1,7 +1,7 @@
 /**
  * Skill values: what a character can roll, read from the actor and filled in with base values for anything
- * missing from the sheet. Characteristics, attributes (Luck, Sanity, Idea, Know), every skill with its Regular,
- * Hard and Extreme values, the rows of the menus' three tabs, and the lowest Luck for a group Luck roll. The only
+ * missing from the sheet. Characteristics, attributes (Luck and Sanity), every skill with its Regular,
+ * Hard and Extreme values, the rows of the menus' two check tabs, and the lowest Luck for a group Luck roll. The only
  * owner of skill-name matching (by CoC ID, CoC7's own-language flag, name, and an open-ended skill's group); no
  * other part reads base-skills.js. Data and lookups only: no hooks, no UI, nothing written to any actor. Every
  * read is guarded, so a missing field gives an empty value instead of an error. No skill is ever hidden, whatever
@@ -206,23 +206,17 @@ export function characteristics(actor) {
 }
 
 /**
- * Luck, Sanity, Idea and Know. Idea and Know are INT and EDU rolls with their own names
- * (Keeper Rulebook p. 90); CoC7 works them out in `system.config`, which falls back to INT and EDU.
+ * Luck and Sanity (Sanity with its max). Idea and Know are asked for as INT and EDU checks with a label.
  * @param {Actor} actor
  * @returns {{key: string, label: string, value: number|null, half: number|null, fifth: number|null,
- *   max?: number|null, characteristic?: string}[]} Empty when there is no actor.
+ *   max?: number|null}[]} Empty when there is no actor.
  */
 export function attributes(actor) {
   if (!actor) return [];
   const attribs = actor.system?.attribs;
-  const config = actor.system?.config;
   return [
     { key: "lck", label: "Luck", ...withLevels(attribs?.lck?.value) },
-    { key: "san", label: "Sanity", ...withLevels(attribs?.san?.value), max: numberOrNull(attribs?.san?.max) },
-    { key: "idea", label: "Idea", characteristic: "int",
-      ...withLevels(numberOrNull(config?.idea?.value) ?? characteristicValue(actor, "int")) },
-    { key: "know", label: "Know", characteristic: "edu",
-      ...withLevels(numberOrNull(config?.know?.value) ?? characteristicValue(actor, "edu")) }
+    { key: "san", label: "Sanity", ...withLevels(attribs?.san?.value), max: numberOrNull(attribs?.san?.max) }
   ];
 }
 
@@ -284,36 +278,23 @@ export function skills(actor) {
   ];
 }
 
-/** The Attribute tab's rows: Luck and Sanity, then Idea and Know, which are INT and EDU rolls (p. 90). */
-const ATTRIBUTE_ROWS = Object.freeze([
-  { key: "lck", name: "Luck" },
-  { key: "san", name: "Sanity" },
-  { key: "idea", name: "Idea (INT)" },
-  { key: "know", name: "Know (EDU)" }
-]);
-
 /**
- * What one character can roll, as the rows of the Check menu's and the Opposed view's three tabs, so both list
- * the same checks in the same order with the same values. Characteristics in sheet order; Luck, Sanity, Idea and
- * Know; every skill as `skills()` orders them (trained first, then the rest A–Z at base value).
- * @param {Actor|null} actor null: the characteristic and attribute rows without values, and no skills.
- * @param {{sanity?: boolean}} [options] `sanity: false` leaves Sanity out (it is never opposed).
- * @returns {{characteristic: object[], attribute: object[], skill: object[]}} each row
+ * What one character can roll, as the rows of the Check menu's and the Opposed view's two tabs, so both list
+ * the same checks in the same order with the same values. Characteristics in sheet order; every skill as
+ * `skills()` orders them (trained first, then the rest A–Z at base value). Luck is the Other menu's, Sanity has its
+ * own menu, and Idea and Know are INT and EDU checks with a label (Void, 2026-11-15).
+ * @param {Actor|null} actor null: the characteristic rows without values, and no skills.
+ * @returns {{characteristic: object[], skill: object[]}} each row
  *   `{key, name, check, value, half, fifth, trained, onSheet}`: `key` is unique within the menu
- *   ("characteristic:str", "attribute:lck", "skill:spot hidden"); `check` is what roll-requests' checkRequest and
- *   opposedRequest take.
+ *   ("characteristic:str", "skill:spot hidden"); `check` is what roll-requests' checkRequest and opposedRequest take.
  */
-export function checkChoices(actor, { sanity = true } = {}) {
+export function checkChoices(actor) {
   const chars = characteristics(actor);
-  const attribs = attributes(actor);
   const valued = (row) => ({ value: row?.value ?? null, half: row?.half ?? null, fifth: row?.fifth ?? null });
   return {
     characteristic: CHARACTERISTICS.map((key) => ({ key: `characteristic:${key}`, name: key.toUpperCase(),
       check: { kind: "characteristic", name: key }, ...valued(chars.find((c) => c.key === key)),
       trained: true, onSheet: true })),
-    attribute: ATTRIBUTE_ROWS.filter(({ key }) => sanity || key !== "san").map(({ key, name }) => ({
-      key: `attribute:${key}`, name, check: { kind: "attribute", name: key },
-      ...valued(attribs.find((a) => a.key === key)), trained: true, onSheet: true })),
     skill: skills(actor).map((row) => ({ key: skillKey(row.name), name: row.name,
       check: { kind: "skill", name: row.name, cocid: row.cocid ?? null }, value: row.value, half: row.half,
       fifth: row.fifth, trained: row.trained, onSheet: row.onSheet }))

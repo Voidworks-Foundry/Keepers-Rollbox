@@ -71,3 +71,7 @@ The loss rule the loss line uses is `roll-requests/`' `sanityLoss` (`docs/roll-r
 
 ## Settings
 None of its own. Shown only while the Rollbox switch (`rollboxEnabled`) is on.
+
+## Tests
+
+`tests/sanity-menu.test.mjs`: find the test you need in [TESTS.md, sanity-menu.test.mjs](TESTS.md#sanity-menutestmjs) and run only that.

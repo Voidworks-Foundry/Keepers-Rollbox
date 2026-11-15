@@ -1,0 +1,59 @@
+/*
+ * Rollbox: the one-character mini sheet's characteristics, SAN and Luck as buttons (sheet-clicks.js; Void,
+ * 2026-11-15). They look as they always did (mini-sheet.css draws the cells); this file takes away what Foundry's
+ * own button style adds (height, border, font, centring), then adds a pointer, a subtle highlight in the theme's
+ * accent on hover, and a visible focus ring. Also the opposed two-step's note above the card. Loaded after
+ * mini-sheet.css.
+ */
+
+.rollbox-panel button.rollbox-characteristic,
+.rollbox-panel button.rollbox-stat {
+  height: auto;
+  min-height: 0;
+  width: auto;
+  margin: 0;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  box-shadow: none;
+  outline: none;
+  transition: none;
+  cursor: pointer;
+}
+
+.rollbox-panel button.rollbox-characteristic {
+  gap: 0;
+}
+
+/* SAN and Luck: the label line and the bar fill the box, as in the plain stat. */
+.rollbox-panel button.rollbox-stat {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.rollbox-panel button.rollbox-characteristic:hover,
+.rollbox-panel button.rollbox-stat:hover {
+  background: color-mix(in srgb, var(--rollbox-accent) 20%, var(--rollbox-cell));
+}
+
+.rollbox-panel button.rollbox-characteristic:focus-visible,
+.rollbox-panel button.rollbox-stat:focus-visible {
+  outline: 2px solid var(--rollbox-accent);
+  outline-offset: 1px;
+}
+
+/* The opposed two-step: "Opposed: Harvey · STR. Select the other character and right-click their value." */
+.rollbox-panel .rollbox-pending {
+  pointer-events: all;
+  box-sizing: border-box;
+  width: var(--rollbox-width);
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  color: var(--rollbox-text);
+  background: var(--rollbox-bg);
+  border: 1px solid var(--rollbox-accent);
+  border-radius: var(--rollbox-radius);
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.3;
+}

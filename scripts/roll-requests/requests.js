@@ -8,8 +8,8 @@ import { CHARACTERISTICS } from "../skill-values/index.js";
 import { DIFFICULTIES, MAX_DICE, cleanLabel, cleanOption } from "./links.js";
 
 const KINDS = Object.freeze(["characteristic", "attribute", "skill"]);
-/** Attribute keys the Check menu sends: CoC7's Luck and Sanity, plus Idea and Know (INT and EDU rolls, p. 90). */
-const ATTRIBUTES = Object.freeze(["lck", "san", "idea", "know"]);
+/** Attribute keys a menu sends: CoC7's Luck (the Other menu). Sanity checks go through sanityRequest. */
+const ATTRIBUTES = Object.freeze(["lck"]);
 /** Which of a weapon's two skills a request uses; anything else means "the one CoC7's cards would use". */
 const WEAPON_SKILLS = Object.freeze(["main", "alternative"]);
 /** One term of a Sanity loss: a whole number, or dice such as D6, 1D6, 2D10 (no zero dice, no zero faces). */
@@ -33,7 +33,7 @@ function normalDice(dice) {
 
 /**
  * One check as the menus describe it, checked and tidied. Null when it can't be requested.
- * Characteristic: `name` is CoC7's key (`str` … `edu`). Attribute: `lck`, `san`, `idea` or `know`.
+ * Characteristic: `name` is CoC7's key (`str` … `edu`). Attribute: `lck`.
  * Skill: `name` as listed (`Spot Hidden`, `Pilot (Boat)`), optional `cocid`, and optional `value`: the
  * value to roll an NPC at when the skill isn't on its sheet (the "+ Add" entry's group base or the
  * Keeper's typed value). Skills in Rollbox's table take their base from the table instead.

@@ -4,7 +4,9 @@
  * .rollbox-theme-light for Light); the "Panel colour" is the background's tint within it, kept dark enough for the
  * Dark theme's light text or light enough for the Light theme's dark text (theme.js), and "Panel transparency" its
  * alpha. Every text colour of each palette has at least 4.5:1 contrast (WCAG AA) on the solid background; disabled
- * text at least 3:1. The personal "Panel size" setting scales the whole panel from its bottom-left corner.
+ * text at least 3:1. The personal "Panel size" setting scales the whole panel from its anchored corner.
+ * Docked (the default) the panel sits in Foundry's left column; moved, it is in #interface (position.js), and
+ * position.css turns the buttons, the flyout and the Opposed view to the left or downwards.
  */
 
 .rollbox-panel {
@@ -98,7 +100,8 @@
 
 /*
  * A "replace" menu (the Opposed roll) in the card's place: a row that starts where the card was and runs
- * to the right over the canvas, bottoms aligned. The menu's own cards turn pointer events back on.
+ * to the right over the canvas, bottoms aligned (position.css can turn it left, or align its tops). Its
+ * order stays the same either way. The menu's own cards turn pointer events back on.
  */
 .rollbox-stage {
   display: flex;
@@ -362,6 +365,7 @@
  * Buttons and flyout, to the right of the card, bottoms aligned with it. The buttons have one fixed height
  * (Void, 2026-11-14): three fill the one-character mini sheet; more (four with two tokens) reach up above the
  * card, and a taller names card never stretches or squishes them. A taller flyout reaches up too.
+ * A moved panel can turn them to the left of the card, or down from its top (position.css).
  */
 .rollbox-side {
   position: absolute;
@@ -371,6 +375,7 @@
   align-items: flex-end;
   gap: var(--rollbox-gap);
 }
+
 
 .rollbox-buttons {
   pointer-events: all;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { registerItemMenu, renderItemMenu } from "../scripts/item-menu/index.js";
+import { registerOtherMenu, renderOtherMenu } from "../scripts/other-menu/index.js";
 import { makeCoC7, makeDom, makeEnv, makeRollActor, resultText } from "./mocks.mjs";
 
 const STATS = { str: 50, con: 60, siz: 65, dex: 55, app: 45, int: 70, pow: 40, edu: 75 };
@@ -17,11 +17,15 @@ function setup() {
 const pc = (options = {}) => makeRollActor({ name: "Alice", owners: [game.users[1]], characteristics: STATS,
   luck: 45, san: 60, ...options });
 
-/** The Item menu drawn for these characters, with helpers to use it like the Keeper. */
-function open(actors) {
+/**
+ * The Other menu drawn for these characters (one opens on Item, two or more on Luck), with helpers to use it like the
+ * Keeper. `title()` is the flyout's title the menu set.
+ */
+function open(actors, start) {
   const body = document.createElement("div");
   document.body.append(body); // jsdom fires change on click only when the input is in the document
-  renderItemMenu(body, { actors });
+  let heading = "";
+  const controller = renderOtherMenu(body, { actors, start, setTitle: (text) => { heading = text; } });
   const all = (selector) => [...body.querySelectorAll(selector)];
   const row = (name) => all(".rollbox-item-row").find((node) => node.querySelector(".rollbox-item-name").textContent === name);
   const pick = (name) => row(name).querySelector("input").click();
@@ -36,22 +40,79 @@ function open(actors) {
   /** A button of the Custom damage picker, which the Custom damage button opens. */
   const inPicker = (label) => [...body.querySelectorAll(".rollbox-dice button")].find((n) => n.textContent === label).click();
   const damage = () => body.querySelector(".rollbox-item-damage").value;
-  return { body, all, row, pick, press, type, text, disabled, inPicker, damage };
+  const tabs = () => all(".rollbox-other-tab").map((n) => [n.textContent, n.disabled, n.getAttribute("aria-selected")]);
+  const sendsDisabled = () => all(".rollbox-other-action").every((b) => b.disabled);
+  const result = () => resultText(body.querySelector(".rollbox-result"));
+  return { body, all, row, pick, press, type, text, disabled, inPicker, damage, tabs, sendsDisabled, result, controller,
+    title: () => heading };
 }
 
 /** Let send() finish: it awaits CoC7's lookups and ChatMessage.create. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
 
-test("registerItemMenu: only on the Keeper's client with the Rollbox switch on; draws only for one character", () => {
+test("registerOtherMenu: only on the Keeper's client with the Rollbox switch on", () => {
   makeEnv({ isGM: false });
-  assert.equal(registerItemMenu(), false);
+  assert.equal(registerOtherMenu(), false);
   makeEnv({ values: { rollboxEnabled: false } });
-  assert.equal(registerItemMenu(), false);
+  assert.equal(registerOtherMenu(), false);
   makeEnv({ values: { rollboxEnabled: true } });
-  assert.equal(registerItemMenu(), true);
+  assert.equal(registerOtherMenu(), true);
+});
+
+test("sections: one character opens on Item (\"Item check\"); two or more open on Luck with Item greyed out", () => {
   setup();
-  const m = open([pc(), pc({ name: "Bob" })]);
-  assert.equal(m.body.children.length, 0);
+  let m = open([pc()]);
+  assert.deepEqual(m.tabs(), [["Item", false, "true"], ["Luck", false, "false"]]);
+  assert.equal(m.title(), "Item check");
+  m.press("Luck");
+  assert.equal(m.title(), "Luck check");
+  assert.equal(m.body.querySelector(".rollbox-item-list"), null);
+  m = open([pc(), pc({ name: "Bob" })]);
+  assert.deepEqual(m.tabs(), [["Item", true, "false"], ["Luck", false, "true"]]);
+  assert.equal(m.body.querySelector(".rollbox-item-list"), null);
+});
+
+test("Luck: CoC7's Luck check to each with the options and label; an NPC rolled for the Keeper", async () => {
+  const { env } = setup();
+  const guard = makeRollActor({ name: "Guard", owners: [], characteristics: STATS, luck: 30 });
+  const m = open([pc(), guard]);
+  assert.deepEqual(m.all(".rollbox-other-luck-row").map((n) => n.textContent), ["AliceLuck 45", "GuardLuck 30"]);
+  m.press("Hard"); m.type(".rollbox-other-label", "is the cab there?");
+  m.press("Send to each (2)"); await settle();
+  assert.match(env.chat[0].content, /subtype:attribute,name:lck,difficulty:2,.*\{Hard Luck · is the cab there\?\}/);
+  assert.deepEqual(guard.calls.map((c) => c.slice(0, 2)), [["attributeCheck", "lck"]]);
+  assert.deepEqual(m.result(), ["Luck check sent to:", "Alice", "Rolled for you:", "Guard"]);
+});
+
+test("group Luck roll: only the lowest Luck is asked; a tie asks the Keeper to pick", async () => {
+  const { env } = setup();
+  const alice = pc({ luck: 45 }); const bob = pc({ name: "Bob", owners: [game.users[2]], luck: 35 });
+  let m = open([alice, bob]);
+  m.body.querySelector(".rollbox-other-group input").click();
+  m.press("Request from player"); await settle();
+  assert.equal(env.chat.length, 1);
+  assert.match(env.chat[0].content, /requested Bob make/);
+
+  const carol = pc({ name: "Carol", luck: 35, uuid: "Actor.Carol" });
+  m = open([alice, bob, carol]);
+  m.body.querySelector(".rollbox-other-group input").click();
+  assert.equal(m.sendsDisabled(), true); // a tie: nobody picked yet
+  assert.equal(m.text(".rollbox-status"), "Pick who rolls for the group.");
+  m.press("Carol");
+  m.press("Request from player"); await settle();
+  assert.match(env.chat[1].content, /requested Carol make/);
+  assert.equal(env.chat.length, 2);
+});
+
+test("started from the mini sheet's Luck: opens on Luck; plain sends a Regular Luck check at once, or copies its link", async () => {
+  const { env, calls } = setup();
+  const m = open([pc()], { section: "luck" });
+  assert.equal(m.title(), "Luck check");
+  m.press("Extreme");
+  m.controller.apply({ section: "luck", plain: true, send: "whisper" }); await settle();
+  assert.match(env.chat[0].content, /name:lck,difficulty:1,/);
+  m.controller.apply({ section: "luck", plain: true, send: "link" }); await settle();
+  assert.match(calls.copied[0], /name:lck,difficulty:1/);
 });
 
 test("a weapon: listed with its skill and values; sent as a labelled skill check with the options", async () => {

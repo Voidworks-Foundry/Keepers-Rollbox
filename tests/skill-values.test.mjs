@@ -54,23 +54,17 @@ test("characteristics: missing values are null; no actor gives an empty list", (
   assert.deepEqual(SV.characteristics(null), []);
 });
 
-test("attributes: Luck, Sanity with max, Idea and Know from CoC7's config", () => {
+test("attributes: Luck, and Sanity with its max (no Idea or Know: those are INT and EDU checks)", () => {
   makeEnv();
   const list = SV.attributes(makeActor({ characteristics: STATS, luck: 55, san: 48, sanMax: 99, idea: 72, know: 77 }));
-  assert.deepEqual(list.map((a) => a.label), ["Luck", "Sanity", "Idea", "Know"]);
+  assert.deepEqual(list.map((a) => a.label), ["Luck", "Sanity"]);
   assert.deepEqual(list[0], { key: "lck", label: "Luck", value: 55, half: 27, fifth: 11 });
   assert.equal(list[1].value, 48); assert.equal(list[1].max, 99);
-  assert.equal(list[2].value, 72); assert.equal(list[2].characteristic, "int");
-  assert.equal(list[3].value, 77); assert.equal(list[3].characteristic, "edu");
 });
 
-test("attributes: Idea and Know fall back to INT and EDU; missing fields are null", () => {
+test("attributes: missing fields are null", () => {
   makeEnv();
-  const actor = makeActor({ characteristics: STATS });
-  actor.system.config = undefined;
-  const list = SV.attributes(actor);
-  assert.equal(list[2].value, 70);
-  assert.equal(list[3].value, 75);
+  const list = SV.attributes(makeActor({ characteristics: STATS }));
   assert.equal(list[0].value, null);
   assert.equal(list[1].max, null);
   assert.equal(SV.attributes(makeActor({ system: {} })).every((a) => a.value === null), true);

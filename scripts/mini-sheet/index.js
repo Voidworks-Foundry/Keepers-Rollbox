@@ -1,25 +1,28 @@
 /**
  * Mini sheet: when the Keeper selects tokens, a small panel sits directly on top of Foundry's players list
- * (the latency and FPS card) and shows the selected characters: the mini sheet for one, the names card for
+ * (the latency and FPS card), or wherever the Keeper dragged it when moving is allowed (position.js), and shows the
+ * selected characters: the mini sheet for one, the names card for
  * two or more (its value columns follow the open menu). Beside it, the buttons that open the Check, Sanity,
  * Item, Opposed and Assist menus (menu-host.js).
  * Keeper only, and only with the personal switch on: players run none of this.
  * Selection changes are gathered into one redraw per animation frame (a box-select fires one hook per
  * token). Where it goes and which hooks say the selection changed: docs/BUILD-GUIDE.md, "The panel and CSS".
  * Its look follows the personal Theme, Panel colour, transparency and size settings (theme.js, mini-sheet.css).
+ * On the one-character mini sheet, a click on a characteristic, SAN or Luck opens that check's menu, with CoC7's
+ * sheet shortcuts (sheet-clicks.js).
  */
-import { MODULE_ID, getSetting, isKeeper, uniqueActors, warn } from "../utils.js";
+import { MODULE_ID, actorKey, element, getSetting, isKeeper, tellKeeper, uniqueActors, warn } from "../utils.js";
 import { miniSheet, namesCard, sheetGhost } from "./cards.js";
 import { MenuHost } from "./menu-host.js";
 import { DEFAULT_COLOR, DEFAULT_THEME, flippedColor, hexColor, normalTheme, shownColor } from "./theme.js";
+import { forgetSpot, PanelPlace, rescale } from "./position.js";
+import { OpposedStep, howClicked, shortcut } from "./sheet-clicks.js";
 
 export { registerMenu } from "./menu-host.js";
 export { DEFAULT_COLOR, DEFAULT_THEME, THEMES } from "./theme.js";
+export { DEFAULT_MENU_SIDE, MENU_SIDES } from "./position.js";
 /** The one-character card, for menus that show it themselves (the Opposed roll shows both sides' sheets). */
 export { miniSheet } from "./cards.js";
-
-/** Foundry's players list (build 368: `aside#players` in `#ui-left-column-1`). The panel goes just before it. */
-const PLAYERS_ID = "players";
 
 /**
  * Panel transparency in percent (setting `rollboxTransparency`): 0 is solid. It changes only the
@@ -36,22 +39,24 @@ const LIGHT_THEME_CLASS = "rollbox-theme-light";
 
 /**
  * Panel size in percent (setting `rollboxScale`). The whole panel, with its buttons, menus and the
- * opposed view, is scaled from its bottom-left corner, so it stays on top of the players list.
+ * opposed view, is scaled from its anchored corner (bottom left when docked), so that corner stays put.
  */
 export const SCALE = Object.freeze({ min: 80, max: 150, step: 10, default: 100 });
 /** The panel's scale as a number (1.2 for 120%); mini-sheet.css keeps the flyout's height on screen with it. */
 const SCALE_VARIABLE = "--rollbox-scale";
 
-/** The panel, built the first time something is selected: { root, cardSlot, host, theme, color }. */
+/** The panel, built the first time something is selected: { root, cardSlot, host, place, theme, color }. */
 let panel = null;
 /** The pending animation frame, or null. */
 let frame = null;
 /** The characters the panel shows now; empty while it is hidden. */
 let shown = [];
-/** Warn only once when the players list can't be found. */
-let warnedNoPlayers = false;
 /** What the names card last showed (characters and column values), so a menu's change redraws it only when needed. */
 let cardKey = "";
+/** The opposed two-step started by a right click on a characteristic (sheet-clicks.js). */
+let step = new OpposedStep();
+/** A menu to open once the next redraw has the new selection: { id, start } (the opposed two-step's second click). */
+let pendingOpen = null;
 
 /**
  * ready: install the panel on the Keeper's client when the Rollbox switch is on.
@@ -60,13 +65,15 @@ let cardKey = "";
  */
 export function registerMiniSheet() {
   if (!isKeeper() || !getSetting("rollboxEnabled")) return false;
-  panel = null; frame = null; shown = []; warnedNoPlayers = false; cardKey = "";
+  panel = null; frame = null; shown = []; cardKey = ""; step = new OpposedStep(); pendingOpen = null;
   Hooks.on("controlToken", scheduleRedraw);
   Hooks.on("deleteToken", scheduleRedraw);
   Hooks.on("canvasReady", scheduleRedraw);
   Hooks.on("canvasTearDown", onTearDown);
   Hooks.on("renderPlayers", attach);
   Hooks.on("updateActor", onActorUpdate);
+  globalThis.addEventListener?.("resize", onResize);
+  globalThis.document?.addEventListener("keydown", onKey);
   return true;
 }
 
@@ -96,6 +103,8 @@ function redraw() {
   panel.host.update(actors);
   drawCard(true);
   panel.root.hidden = false;
+  panel.place.place(); // now that it has its size: a floating panel is kept on screen
+  if (pendingOpen) openPending();
 }
 
 /**
@@ -109,7 +118,8 @@ function drawCard(force = false) {
   const actors = shown;
   if (actors.length === 1) {
     cardKey = "";
-    panel.cardSlot.replaceChildren(miniSheet(actors[0]));
+    const actor = actors[0];
+    panel.cardSlot.replaceChildren(miniSheet(actor, { onValue: (event, value, right) => onValue(event, value, right, actor) }));
     return;
   }
   const columns = panel.host.columns(actors);
@@ -137,8 +147,17 @@ function buildPanel() {
   cardSlot.className = "rollbox-card-slot";
   const side = document.createElement("div");
   side.className = "rollbox-side";
-  root.append(cardSlot, side);
-  const built = { root, cardSlot, host: new MenuHost(side, cardSlot, () => drawCard()),
+  const note = element("div", "rollbox-pending");
+  note.hidden = true;
+  note.setAttribute("aria-live", "polite");
+  root.append(note, cardSlot, side);
+  // A left click anywhere on the panel cancels the opposed two-step (a value's own click then does its work).
+  root.addEventListener("pointerdown", (event) => {
+    if (event.button === 0 && step.cancel()) drawNote();
+  });
+  const place = new PanelPlace(root, { movable: readSetting("rollboxMovable", false),
+    spot: readSetting("rollboxOffset", undefined), menuSide: readSetting("rollboxMenuSide", undefined) });
+  const built = { root, cardSlot, note, host: new MenuHost(side, cardSlot, () => { drawCard(); keepInView(); }), place,
     theme: DEFAULT_THEME, color: DEFAULT_COLOR };
   setOpacity(root, readSetting("rollboxTransparency", TRANSPARENCY.default));
   setTheme(built, readSetting("rollboxTheme", DEFAULT_THEME), readSetting("rollboxColor", DEFAULT_COLOR));
@@ -215,17 +234,15 @@ async function saveColor(hex) {
 }
 
 /**
- * Scale the panel from its bottom-left corner. `transform` leaves the panel's place in the column alone, so
- * it grows up and to the right, over the canvas, and never over the players list. At 100% there is no
- * transform at all, so the default panel is exactly as before. Out-of-range values are clamped.
+ * Scale the panel from its anchored corner. `transform` leaves the panel's place alone, so docked it grows up and
+ * to the right, over the canvas, and never over the players list; at 100% there is no transform at all, so the
+ * default panel is exactly as before (position.js, `scaleTransform`). Out-of-range values are clamped.
  */
 function setScale(root, size) {
   const n = Number(size);
   const percent = Number.isFinite(n) ? Math.max(SCALE.min, Math.min(SCALE.max, n)) : SCALE.default;
-  const factor = percent / 100;
-  root.style.setProperty(SCALE_VARIABLE, String(factor));
-  root.style.transformOrigin = factor === 1 ? "" : "left bottom";
-  root.style.transform = factor === 1 ? "" : `scale(${factor})`;
+  root.style.setProperty(SCALE_VARIABLE, String(percent / 100));
+  rescale(root);
 }
 
 /**
@@ -237,20 +254,54 @@ export function applyScale(size) {
 }
 
 /**
- * Put the panel just before the players list, the same column. Also the renderPlayers hook, in case
- * Foundry rebuilt the column. Not inside #players: Foundry replaces that element's contents on each render.
- * @returns {boolean} false when there is no panel yet or no players list to sit on.
+ * Put the panel in its place (position.js): docked just before the players list, or floating in a corner. Also the
+ * renderPlayers hook, in case Foundry rebuilt the column.
+ * @returns {boolean} false when there is no panel yet or no players list to dock on.
  */
 function attach() {
-  if (!panel) return false;
-  const players = document.getElementById(PLAYERS_ID);
-  if (!players) {
-    if (!warnedNoPlayers) warn("Foundry's players list is missing; the panel can't show.");
-    warnedNoPlayers = true;
-    return false;
-  }
-  if (players.previousElementSibling !== panel.root) players.before(panel.root);
-  return true;
+  return panel ? panel.place.place() : false;
+}
+
+/** The window's resize: a moved panel is kept on screen (its saved spot is left as it is). */
+function onResize() {
+  keepInView();
+}
+
+/**
+ * A menu opened, closed or changed size, or the window was resized: a moved panel is placed again, so it stays on
+ * screen and an open menu is shifted into view (position.js). The panel's place is only read until it is built.
+ */
+function keepInView() {
+  if (panel && !panel.root.hidden) panel.place.place();
+}
+
+/**
+ * "Allow moving the panel" changed. Off: the dropped spot is forgotten and the panel goes back above the players list
+ * (also before the panel is built, so it isn't used on the next reload). On: it stays docked until dragged.
+ * @param {boolean} movable
+ */
+export function applyMovable(movable) {
+  if (!isKeeper()) return;
+  if (panel) panel.place.setMovable(movable);
+  if (!movable) forgetSpot();
+}
+
+/**
+ * The "Reset position" button beside "Allow moving the panel": the dropped spot is forgotten and the panel goes back
+ * above the players list at once (also before the panel is built, so it isn't used on the next reload). Keeper only.
+ */
+export function resetPosition() {
+  if (!isKeeper()) return;
+  if (panel) panel.place.reset();
+  forgetSpot();
+}
+
+/**
+ * "Menus open to the" changed: applied at once (nothing to change before the panel is built).
+ * @param {string} side "auto", "right" or "left"
+ */
+export function applyMenuSide(side) {
+  if (panel) panel.place.setMenuSide(side);
 }
 
 /** Nothing selected: hide the panel and close any open menu. */
@@ -265,7 +316,69 @@ function hide() {
 function onTearDown() {
   if (frame !== null) cancelAnimationFrame(frame);
   frame = null;
+  step.cancel();
+  pendingOpen = null;
+  drawNote();
   hide();
+}
+
+// --- Clicks on the mini sheet's values (sheet-clicks.js; Void, 2026-11-15) ---
+
+/**
+ * A click on a characteristic, SAN or Luck: open that menu with its starting state (a send included), or take a
+ * step of the opposed two-step. Nothing is sent from here; the menu that opens sends.
+ */
+function onValue(event, value, right, actor) {
+  const action = shortcut(value, howClicked(event, right));
+  if (!action || !panel) return;
+  if (action.opposed) {
+    opposedClick(actor, action.opposed);
+    return;
+  }
+  panel.host.open(action.open, action.start);
+}
+
+/**
+ * A right click on a characteristic: the first remembers the side (the note says so); the second, on another
+ * character's (that token selected), selects the first character's token too and opens the Opposed roll with both
+ * sides picked, or makes the card at once with Shift.
+ */
+function opposedClick(actor, opposed) {
+  const token = Array.from(globalThis.canvas?.tokens?.controlled ?? []).find((t) => t?.actor === actor) ?? null;
+  const both = step.click(actor, token, opposed);
+  drawNote();
+  if (!both) return;
+  const { first, second, create } = both;
+  pendingOpen = { id: "opposed", start: { first: actorKey(first.actor),
+    picks: { [actorKey(first.actor)]: first.key, [actorKey(second.actor)]: second.key }, create } };
+  try {
+    first.token.control({ releaseOthers: false }); // Foundry's controlToken hook redraws the panel with both
+  } catch (error) {
+    pendingOpen = null;
+    warn("couldn't select the first character's token for the opposed roll.", error);
+    tellKeeper(`Rollbox couldn't select ${first.actor?.name ?? "the first character"}'s token. Select both and use Opposed.`);
+    return;
+  }
+  scheduleRedraw();
+}
+
+/** The Opposed roll, opened once the redraw shows both characters. */
+function openPending() {
+  const { id, start } = pendingOpen;
+  pendingOpen = null;
+  if (!panel.host.open(id, start)) tellKeeper("Select both characters and use Opposed.");
+}
+
+/** The opposed two-step's note above the card, or nothing. */
+function drawNote() {
+  if (!panel) return;
+  panel.note.textContent = step.note;
+  panel.note.hidden = !step.note;
+}
+
+/** Escape cancels the opposed two-step. */
+function onKey(event) {
+  if (event.key === "Escape" && step.cancel()) drawNote();
 }
 
 /** updateActor: a shown character changed (HP, SAN after a loss…), so draw the card again. */

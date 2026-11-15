@@ -1,22 +1,23 @@
 /**
  * Check menu: what the Keeper's Check button opens. The Keeper ticks one check (or two or more for a
- * combined roll, p. 92) from three tabs, sets the difficulty, dice, Blind and an optional label, and sends it
- * to the selected characters through roll-requests/, which builds CoC7's own links and rolls NPCs for the
- * Keeper. Layout and rules: DESIGN.md, "Check menu". Keeper only: registered only on the Keeper's client.
+ * combined roll, p. 92) from two tabs, Characteristic and Skill, sets the difficulty, dice, Blind and an optional
+ * label (it can say "Idea" or "Know": those are INT and EDU checks), and sends it to the selected characters through
+ * roll-requests/, which builds CoC7's own links and rolls NPCs for the Keeper. A click on the mini sheet can open it
+ * with a characteristic ticked, or send at once (`apply`). Layout and rules: DESIGN.md, "Check menu". Keeper only:
+ * registered only on the Keeper's client.
  */
-import { actorKey, element, getSetting, isKeeper } from "../utils.js";
+import { element, getSetting, isKeeper } from "../utils.js";
 import { registerMenu } from "../mini-sheet/index.js";
 import {
-  checkChoices, comparable, findSkillRow, groupBase, groupSkills, lowestLuck, skillKey, withLevels
+  checkChoices, comparable, findSkillRow, groupBase, groupSkills, skillKey, withLevels
 } from "../skill-values/index.js";
 import { checkRequest, send } from "../roll-requests/index.js";
 import {
   CHECK_TABS, button, filterRows, howRows, levels, line, requestLabel, runSend, segmented, sendSection, showResult
 } from "../shared/index.js";
 
-const LUCK_KEY = "attribute:lck";
 /** The status line, in red, while something required is missing (the buttons are greyed out until then). */
-const MISSING = Object.freeze({ tick: "Tick a check to request it.", group: "Pick who rolls for the group." });
+const MISSING = Object.freeze({ tick: "Tick a check to request it." });
 /** Highest value the Keeper can type for an "Other skill…" that has no known base. */
 const MAX_VALUE = 100;
 
@@ -34,11 +35,15 @@ export function registerCheckMenu() {
  * The menu host's render: builds the whole menu from scratch for these characters. Called when the menu
  * opens and again when the selection changes while it is open.
  * @param {HTMLElement} body the flyout's body, already empty
- * @param {{actors: Actor[]}} context the selected characters
+ * @param {{actors: Actor[], start?: object}} context the selected characters, and a starting state (`apply`)
+ * @returns {{apply: (start: object) => void}|undefined} the controller the menu host keeps while it is open
  */
-export function renderCheckMenu(body, { actors = [] } = {}) {
-  if (!actors.length) return;
-  new CheckMenu(body, actors).build();
+export function renderCheckMenu(body, { actors = [], start } = {}) {
+  if (!actors.length) return undefined;
+  const menu = new CheckMenu(body, actors);
+  menu.build();
+  if (start) menu.apply(start);
+  return { apply: (next) => menu.apply(next) };
 }
 
 // --- Small helpers -------------------------------------------------------------------------------
@@ -72,12 +77,11 @@ class CheckMenu {
     this.body = body;
     this.actors = actors;
     this.single = actors.length === 1;
-    /** The three tabs' rows (skill-values): with several characters, without values (their skills: groupSkills). */
+    /** The two tabs' rows (skill-values): with several characters, without values (their skills: groupSkills). */
     this.choices = checkChoices(this.single ? actors[0] : null);
     /** Ticks persist across tabs: key → { check, name }, in the order ticked. */
     this.ticks = new Map();
-    this.state = { tab: CHECK_TABS[0].id, all: true, difficulty: "regular", dice: 0, blind: false, label: "",
-      groupLuck: false, groupPick: null };
+    this.state = { tab: CHECK_TABS[0].id, all: true, difficulty: "regular", dice: 0, blind: false, label: "" };
     this.sending = false;
     this.rows = []; // { node, name } of the skill list, for search
     this.segments = []; // each row of buttons, marked pressed on update()
@@ -95,7 +99,6 @@ class CheckMenu {
     tabs.append(...this.tabButtons);
     this.panels = {
       characteristic: this.listPanel("characteristic"),
-      attribute: this.listPanel("attribute"),
       skill: this.skillPanel()
     };
     const what = element("div", "rollbox-section");
@@ -140,7 +143,7 @@ class CheckMenu {
     return node;
   }
 
-  /** The Characteristic or Attribute tab: one tickable row per check, with its values for one character. */
+  /** The Characteristic tab: one tickable row per characteristic, with its values for one character. */
   listPanel(id) {
     const panel = this.panel(id);
     const list = this.list();
@@ -292,7 +295,7 @@ class CheckMenu {
 
   // --- Options ---
 
-  /** How: combined (All / Any), group Luck, Difficulty and Dice with the Blind toggle, then Label. */
+  /** How: combined (All / Any), Difficulty and Dice with the Blind toggle, then Label. */
   optionsBlock() {
     const block = element("div", "rollbox-section rollbox-check-options");
 
@@ -302,68 +305,18 @@ class CheckMenu {
     this.combinedLine = line("Combined roll", combined.element);
     this.combinedLine.classList.add("rollbox-check-combined");
 
-    this.groupLine = element("div", "rollbox-check-group");
-
     this.how = howRows(this.state, () => this.update());
     this.segments.push(this.how);
 
     const label = element("input", "rollbox-input rollbox-check-label-input");
+    this.labelInput = label;
     label.type = "text";
     label.placeholder = "Label (optional), e.g. notice the hidden knife";
     label.setAttribute("aria-label", "Label shown to the player");
     label.addEventListener("input", () => { this.state.label = label.value; this.update(); });
 
-    block.append(this.combinedLine, this.groupLine, this.how.element, label);
+    block.append(this.combinedLine, this.how.element, label);
     return block;
-  }
-
-  // --- Group Luck roll (Keeper Rulebook pp. 89-90) ---
-
-  /** Offered with two or more characters when Luck is the only tick and someone has a Luck value. */
-  groupLuckOffered() {
-    return this.actors.length > 1 && this.ticks.size === 1 && this.ticks.has(LUCK_KEY)
-      && lowestLuck(this.actors).length > 0;
-  }
-
-  drawGroupLine() {
-    this.groupLine.replaceChildren();
-    this.groupLine.hidden = !this.groupLuckOffered();
-    if (this.groupLine.hidden) return;
-    const lowest = lowestLuck(this.actors);
-    const luck = lowest[0]?.system?.attribs?.lck?.value;
-    const toggle = element("label", "rollbox-line");
-    const box = element("input");
-    box.type = "checkbox";
-    box.checked = this.state.groupLuck;
-    box.addEventListener("change", () => { this.state.groupLuck = box.checked; this.update(); });
-    toggle.append(box, element("span", "", "Group Luck roll: only the lowest Luck rolls"));
-    this.groupLine.append(toggle);
-    if (!this.state.groupLuck) return;
-    if (lowest.length === 1) {
-      this.groupLine.append(element("div", "rollbox-hint rollbox-check-hint", `${lowest[0].name} rolls (Luck ${luck}).`));
-      return;
-    }
-    // A tie: the Keeper picks who rolls for the group.
-    this.groupLine.append(element("div", "rollbox-hint rollbox-check-hint", `Tied at Luck ${luck}. Who rolls?`));
-    const picks = element("div", "rollbox-segmented");
-    for (const actor of lowest) {
-      const node = button("rollbox-btn rollbox-segment", actor.name ?? "", () => {
-        this.state.groupPick = actorKey(actor);
-        this.update();
-      });
-      node.setAttribute("aria-pressed", String(this.state.groupPick === actorKey(actor)));
-      picks.append(node);
-    }
-    this.groupLine.append(picks);
-  }
-
-  /** Who the request goes to: everyone selected, or for a group Luck roll the one lowest-Luck character. */
-  targets() {
-    if (!(this.groupLuckOffered() && this.state.groupLuck)) return this.actors;
-    const lowest = lowestLuck(this.actors);
-    if (lowest.length === 1) return lowest;
-    const pick = lowest.find((actor) => actorKey(actor) === this.state.groupPick);
-    return pick ? [pick] : [];
   }
 
   // --- Sending ---
@@ -374,6 +327,7 @@ class CheckMenu {
     const link = button("rollbox-btn rollbox-check-action rollbox-check-link rollbox-icon-action", "",
       () => this.send("link"));
     link.setAttribute("aria-label", "Copy link");
+    this.linkButton = link;
     const glyph = element("i", "fa-solid fa-link");
     glyph.setAttribute("aria-hidden", "true");
     link.append(glyph);
@@ -397,7 +351,7 @@ class CheckMenu {
 
   send(mode) {
     const request = this.request();
-    const targets = this.targets();
+    const targets = this.actors;
     if (!request || !targets.length) return;
     runSend(this, () => send(request, targets, { mode }),
       (result) => showResult(this.sender.result, result, { what: "Check", mode }));
@@ -413,11 +367,38 @@ class CheckMenu {
     // CoC7 always shows combined cards, so Blind is off and can't be pressed while two or more are ticked.
     this.how.blind.disabled = combined;
     this.how.blind.on = this.state.blind && !combined;
-    this.drawGroupLine();
-
-    const targets = this.targets();
-    this.whisperButton.textContent = requestLabel(targets);
+    this.whisperButton.textContent = requestLabel(this.actors);
     // Greyed out until everything required is there; the red line says what is missing.
-    this.sender.ready(!count ? MISSING.tick : (!targets.length ? MISSING.group : null), this.sending);
+    this.sender.ready(!count ? MISSING.tick : null, this.sending);
+  }
+
+  // --- A starting state, from a click on the mini sheet (Void, 2026-11-15) ---
+
+  /**
+   * Tick a characteristic, as a click on the mini sheet asks. Unless `add`, every other tick is cleared first;
+   * `plain` puts the options back to a Regular check with no dice, not blind and no label; `send` then sends it
+   * ("whisper" as Request from player, or "link" to copy it); `focus: "link"` puts the focus on Copy link.
+   * @param {{tick?: string, add?: boolean, plain?: boolean, send?: "whisper"|"link", focus?: "link"}} start
+   *   `tick` is a row's key, e.g. "characteristic:str".
+   */
+  apply({ tick, add = false, plain = false, send, focus } = {}) {
+    const choice = this.choices.characteristic.find((row) => row.key === tick);
+    if (!add) {
+      this.ticks.clear();
+      for (const box of this.body.querySelectorAll(".rollbox-check-row input")) box.checked = false;
+    }
+    if (choice) {
+      this.showTab("characteristic");
+      const box = this.panels.characteristic.querySelector(`[data-key="${choice.key}"] input`);
+      if (box) box.checked = true;
+      this.ticks.set(choice.key, { check: choice.check, name: choice.name });
+    }
+    if (plain) {
+      Object.assign(this.state, { difficulty: "regular", dice: 0, blind: false, label: "" });
+      this.labelInput.value = "";
+    }
+    this.update();
+    if (send) this.send(send);
+    if (focus === "link") this.linkButton.focus?.();
   }
 }

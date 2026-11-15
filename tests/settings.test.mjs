@@ -10,10 +10,10 @@ globalThis.foundry = { data: { fields: { ColorField } } };
 /** Values in the form that differ from every default, so a Reset shows. */
 const CHANGED = { rollboxTheme: "light", rollboxTransparency: "50", rollboxColor: "#ffffff", rollboxScale: "120" };
 
-/** The settings form, decorated twice: a re-render must not duplicate anything. */
+/** The settings form, decorated twice: a re-render must not duplicate anything. Hidden settings aren't in it. */
 async function renderedForm() {
   const env = makeEnv(); await load(env);
-  const keys = Object.keys(env.registered);
+  const keys = Object.keys(env.registered).filter((k) => env.registered[k].config !== false);
   const field = (k) => (env.registered[k].type === Boolean
     ? `<input name="${MODULE_ID}.${k}" type="checkbox" checked>`
     : `<input name="${MODULE_ID}.${k}" type="text" value="${CHANGED[k] ?? env.registered[k].default}">`);
@@ -28,10 +28,11 @@ async function renderedForm() {
   return { env, dom, root, grp };
 }
 
-test("registered in page order: the panel switch and Simplified dice UI, then Appearance (theme, colour, transparency, size)", async () => {
+test("registered in page order: the panel switch and Simplified dice UI, then Appearance (theme, colour, transparency, size, moving, menus' side)", async () => {
   const env = makeEnv(); await load(env);
   assert.deepEqual(Object.keys(env.registered),
-    ["rollboxEnabled", "rollboxSimplifiedDice", "rollboxTheme", "rollboxColor", "rollboxTransparency", "rollboxScale"]);
+    ["rollboxEnabled", "rollboxSimplifiedDice", "rollboxTheme", "rollboxColor", "rollboxTransparency", "rollboxScale",
+      "rollboxMovable", "rollboxMenuSide", "rollboxOffset"]);
 });
 
 test("Theme: a personal Dark | Light choice, default Dark, applied at once", async () => {
@@ -59,12 +60,21 @@ test("each setting: scope, type, default, range, and whether it needs a reload",
     { ...personal, type: "Number", value: 25, range: { min: 0, max: 70, step: 5 }, requiresReload: false, live: true });
   assert.deepEqual(shape("rollboxScale"),
     { ...personal, type: "Number", value: 100, range: { min: 80, max: 150, step: 10 }, requiresReload: false, live: true });
+  // Per screen: a spot that suits one monitor may not suit another. Where it was dropped isn't shown.
+  assert.deepEqual(shape("rollboxMovable"),
+    { scope: "client", config: true, type: "Boolean", value: true, range: undefined, requiresReload: false, live: true });
+  assert.deepEqual({ ...shape("rollboxMenuSide"), choices: env.registered.rollboxMenuSide.choices },
+    { ...personal, type: "String", value: "auto", range: undefined, requiresReload: false, live: true,
+      choices: { auto: "Automatic", right: "Right", left: "Left" } });
+  assert.deepEqual(shape("rollboxOffset"),
+    { scope: "client", config: false, type: "Object", value: {}, range: undefined, requiresReload: false, live: false });
 });
 
 test("'note' and 'reset' are not leaked into Foundry's setting config", async () => {
   const env = makeEnv(); await load(env);
   assert.ok(!("note" in env.registered.rollboxEnabled));
   assert.ok(!("reset" in env.registered.rollboxTransparency));
+  assert.ok(!("button" in env.registered.rollboxMovable));
 });
 
 test("every setting key starts with rollbox", async () => {
@@ -76,7 +86,7 @@ test("two headings, each before its group's first setting, and one Personal note
   const { root, grp } = await renderedForm();
   const heads = [...root.querySelectorAll("h4.border")].map((h) => h.textContent);
   assert.deepEqual(heads, ["Keeper's Rollbox", "Appearance"]);
-  assert.equal(root.querySelectorAll("[data-coc-scope]").length, 6);
+  assert.equal(root.querySelectorAll("[data-coc-scope]").length, 8);
   const note = grp("rollboxEnabled").querySelector("[data-coc-scope]");
   assert.equal(note.textContent, "Personal setting, affects only your screen.");
   assert.equal(note.style.fontStyle, "italic");
@@ -90,9 +100,10 @@ test("turning the panel off dims Simplified dice UI and the whole Appearance gro
   const master = root.querySelector(`[name="${MODULE_ID}.rollboxEnabled"]`);
   master.checked = false;
   master.dispatchEvent(new dom.window.Event("change"));
-  const dimmed = ["rollboxEnabled", "rollboxSimplifiedDice", "rollboxTheme", "rollboxColor", "rollboxTransparency", "rollboxScale"]
-    .filter((k) => grp(k).style.opacity !== "");
-  assert.deepEqual(dimmed, ["rollboxSimplifiedDice", "rollboxTheme", "rollboxColor", "rollboxTransparency", "rollboxScale"]);
+  const dimmed = ["rollboxEnabled", "rollboxSimplifiedDice", "rollboxTheme", "rollboxColor", "rollboxTransparency", "rollboxScale",
+    "rollboxMovable", "rollboxMenuSide"].filter((k) => grp(k).style.opacity !== "");
+  assert.deepEqual(dimmed, ["rollboxSimplifiedDice", "rollboxTheme", "rollboxColor", "rollboxTransparency", "rollboxScale",
+    "rollboxMovable", "rollboxMenuSide"]);
 });
 
 test("jQuery-style arg ignored without error", async () => {
@@ -108,6 +119,17 @@ test("Reset buttons: one beside theme, transparency, colour and size, none on th
     const button = grp(key).querySelector(".form-fields [data-coc-reset]");
     assert.equal(button.type, "button"); // never submits the form
   }
+});
+
+test("a Reset position button beside Allow moving the panel forgets the panel's spot at once", async () => {
+  const { grp } = await renderedForm();
+  const saved = [];
+  game.settings.set = async (ns, key, value) => { saved.push([key, value]); };
+  const button = grp("rollboxMovable").querySelector(".form-fields [data-coc-action]");
+  assert.deepEqual([button.type, button.textContent], ["button", "Reset position"]); // never submits the form
+  button.click();
+  assert.deepEqual(saved, [["rollboxOffset", {}]]);
+  assert.equal(grp("rollboxMovable").querySelectorAll("[data-coc-action]").length, 1); // none added on the re-render
 });
 
 test("each Reset puts back only its own default, in the form, with a change event", async () => {

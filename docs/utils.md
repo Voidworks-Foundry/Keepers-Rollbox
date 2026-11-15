@@ -41,3 +41,7 @@ Helpers more than one part needs, written once so every part uses one version.
 
 ## Hooks, overrides, keybindings
 None.
+
+## Tests
+
+`tests/utils.test.mjs`: find the test you need in [TESTS.md, utils.test.mjs](TESTS.md#utilstestmjs) and run only that.

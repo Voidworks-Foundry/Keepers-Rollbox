@@ -25,17 +25,18 @@ const DIMMED_OPACITY = "0.45";
 
 /**
  * init: register every setting. It requires a reload unless its own data says otherwise.
- * `note` and `reset` are ours (the scope note and the Reset button), so they aren't passed to Foundry.
+ * `note`, `reset` and `button` are ours (the scope note, the Reset button and an action button), so they aren't
+ * passed to Foundry.
  */
 export function registerSettings() {
-  for (const [key, { note, reset, ...config }] of ALL_SETTINGS) {
+  for (const [key, { note, reset, button, ...config }] of ALL_SETTINGS) {
     game.settings.register(MODULE_ID, key, { config: true, requiresReload: true, ...config });
   }
 }
 
 /**
  * renderSettingsConfig hook: adds scope notes, section headings, Reset buttons for settings marked
- * `reset: true`, and dims options when a section is off.
+ * `reset: true`, a setting's own action `button`, and dims options when a section is off.
  */
 export function decorateSettingsConfig(app, html) {
   if (!(html instanceof HTMLElement)) return;
@@ -44,6 +45,7 @@ export function decorateSettingsConfig(app, html) {
 
   for (const [key, { note }] of ALL_SETTINGS) addScopeNote(formGroup(key), note);
   for (const [key, { reset, default: value }] of ALL_SETTINGS) if (reset) addResetButton(input(key), value);
+  for (const [key, { button }] of ALL_SETTINGS) if (button) addActionButton(input(key), button);
   for (const section of SECTIONS) addSection(html, section, formGroup);
 }
 
@@ -63,6 +65,27 @@ function addResetButton(input, value) {
   button.style.padding = "0 0.5rem";
   button.textContent = "Reset";
   button.addEventListener("click", () => resetInput(input, value));
+  (input.closest(".form-fields") ?? input.parentElement).append(button);
+}
+
+/**
+ * A setting's own action button beside its field, e.g. "Reset position" beside "Allow moving the panel". Unlike
+ * Reset, it acts at once (it isn't a form value, so there is nothing to save).
+ * @param {HTMLElement} input the setting's field
+ * @param {{label: string, tooltip: string, onClick: () => void}} button
+ */
+function addActionButton(input, { label, tooltip, onClick }) {
+  const group = input?.closest(".form-group");
+  if (!group || group.querySelector("[data-coc-action]")) return; // already added on an earlier render
+  const button = document.createElement("button");
+  button.type = "button"; // not a submit button: a click must not save the form
+  button.dataset.cocAction = "";
+  button.dataset.tooltip = tooltip;
+  button.style.flex = "none";
+  button.style.width = "auto";
+  button.style.padding = "0 0.5rem";
+  button.textContent = label;
+  button.addEventListener("click", () => onClick());
   (input.closest(".form-fields") ?? input.parentElement).append(button);
 }
 

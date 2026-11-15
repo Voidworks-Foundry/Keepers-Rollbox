@@ -18,11 +18,10 @@ Each player gets their own request in chat. Non-player characters are rolled pri
 
 When something bad could happen to one of the group, the rulebook's Group Luck roll is made by the character with the lowest Luck (Keeper Rulebook p. 89–90).
 
-1. Select the group and click **Check**.
-2. On the **Attribute** tab, tick **Luck** only.
-3. Choose **Group Luck roll**. Rollbox finds the lowest Luck and sends the roll to that character alone. If two or more are tied, it asks you to pick.
+1. Select the group and click **Other**. With two or more characters it opens on **Luck**, listing each character's Luck.
+2. Tick **Group Luck roll**. Rollbox names the character with the lowest Luck and sends the roll to that character alone. If two or more are tied, it asks you to pick.
 
-The names list shows each character's Luck, so you can see who it will be.
+See [Other](other.md#group-luck-roll) for the details.
 
 ## Good to know
 
