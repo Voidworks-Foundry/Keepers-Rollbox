@@ -1,0 +1,468 @@
+/*
+ * Rollbox: what every menu shares. Sections, the generic buttons, tabs and rows of buttons, lists with tick
+ * boxes or radios, text boxes, labelled lines, hints and result lines (the classes shared/menu.js gives), the
+ * status line, the action buttons, the editable value line, the compact dice picker and its Custom button,
+ * and the Blind toggle. Loaded right after
+ * mini-sheet.css and before every menu's own file (module.json), so a menu's own rule of the same weight wins.
+ * Uses the panel's colour variables (mini-sheet.css), so it follows the Panel colour, transparency and size
+ * settings. Scoped under .rollbox-panel so Foundry's own button and input styles don't apply.
+ */
+
+/*
+ * Placeholders and tick boxes in the theme's own colours: Foundry colours them from its interface theme, not the
+ * panel's (its --input-placeholder-color and --checkbox-* variables, build 368 foundry2.css).
+ */
+.rollbox-panel input,
+.rollbox-panel select,
+.rollbox-panel textarea {
+  --input-placeholder-color: var(--rollbox-placeholder);
+}
+
+.rollbox-panel ::placeholder {
+  color: var(--rollbox-placeholder);
+  opacity: 1;
+}
+
+.rollbox-panel input[type="checkbox"],
+.rollbox-panel input[type="radio"] {
+  --checkbox-background-color: var(--rollbox-box);
+  --checkbox-disabled-color: var(--rollbox-disabled);
+}
+
+/* Foundry's checked orange is for its dark look; on the Light theme a checked box takes the accent. */
+.rollbox-panel.rollbox-theme-light input[type="checkbox"],
+.rollbox-panel.rollbox-theme-light input[type="radio"] {
+  --checkbox-checked-color: var(--rollbox-accent);
+}
+
+/*
+ * Anything hidden stays hidden, whatever `display` a rule gives it. [hidden] twice outweighs any rule of one
+ * class under .rollbox-panel, so the menus need no [hidden] lists of their own.
+ */
+.rollbox-panel [hidden][hidden] {
+  display: none;
+}
+
+/* Sections: what, how, send. Clear space between them, no lines or headings. */
+.rollbox-panel .rollbox-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rollbox-panel * + .rollbox-section {
+  margin-top: 12px;
+}
+
+/* The muted line under a menu's title: who it is for. */
+.rollbox-panel .rollbox-menu-who {
+  margin: -6px 0 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* A small muted caption over a control ("Damage (optional)"). */
+.rollbox-panel .rollbox-caption {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* Status line: in red, what is missing (the Opposed view's tie line is the only plain one). */
+.rollbox-panel .rollbox-status {
+  margin: 0;
+  color: var(--rollbox-text);
+}
+
+.rollbox-panel .rollbox-status.rollbox-status-missing {
+  color: var(--rollbox-bad);
+}
+
+/* Action buttons: the main one is highlighted, the others beside it. */
+.rollbox-panel .rollbox-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-actions > button {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.rollbox-panel .rollbox-primary:not(:disabled) {
+  color: var(--rollbox-text-strong);
+  background: color-mix(in srgb, var(--rollbox-accent) 45%, var(--rollbox-bg-solid));
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel .rollbox-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--rollbox-accent) 60%, var(--rollbox-bg-solid));
+}
+
+.rollbox-panel .rollbox-actions > .rollbox-primary {
+  flex: 1.6;
+}
+
+.rollbox-panel .rollbox-actions > .rollbox-icon-action {
+  flex: 0 0 34px;
+}
+
+/*
+ * What send() did, under the buttons: a heading ("Sanity check sent to:", "Rolled for you:", "Not sent:")
+ * and one name per line under it, muted.
+ */
+.rollbox-panel .rollbox-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-result:empty {
+  display: none;
+}
+
+.rollbox-panel .rollbox-result-heading {
+  color: var(--rollbox-text);
+}
+
+.rollbox-panel .rollbox-result-group .rollbox-result-line {
+  padding-left: 8px;
+}
+
+/*
+ * Generic buttons: tabs, rows of buttons where one is pressed, picks, the send buttons, and the dice picker's and
+ * the Blind toggle's buttons (which keep only their own size and place below).
+ */
+.rollbox-panel .rollbox-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 3px 4px;
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.3;
+  color: var(--rollbox-text);
+  background: var(--rollbox-cell);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 5px;
+  box-shadow: none;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-btn:hover:not(:disabled) {
+  color: var(--rollbox-text-strong);
+  border-color: var(--rollbox-border-hover);
+}
+
+.rollbox-panel .rollbox-tab[aria-selected="true"],
+.rollbox-panel .rollbox-segment[aria-pressed="true"],
+.rollbox-panel .rollbox-dice-toggle[aria-expanded="true"],
+.rollbox-panel .rollbox-dice-button[aria-pressed="true"],
+.rollbox-panel .rollbox-blind[aria-pressed="true"] {
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-pressed);
+  border-color: var(--rollbox-accent);
+}
+
+/* Greyed out: the theme's disabled text, not faded, so it stays readable (3:1). */
+.rollbox-panel .rollbox-btn:disabled {
+  color: var(--rollbox-disabled);
+  cursor: default;
+}
+
+.rollbox-panel .rollbox-segmented {
+  display: flex;
+  gap: 3px;
+}
+
+/* A labelled line: "Difficulty" then its row of buttons. */
+.rollbox-panel .rollbox-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rollbox-panel .rollbox-line > .rollbox-segmented {
+  flex: 1;
+}
+
+.rollbox-panel .rollbox-line-label {
+  flex: none;
+  width: 50px;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* Text boxes and drop-downs: search, label, cause, what the improvised weapon is. */
+.rollbox-panel .rollbox-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  margin: 0;
+  padding: 2px 6px;
+  font-size: var(--font-size-12, 12px);
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-cell);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 5px;
+}
+
+.rollbox-panel .rollbox-input:focus {
+  outline: none;
+  border-color: var(--rollbox-border-hover);
+}
+
+.rollbox-panel select.rollbox-input option {
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-bg-solid);
+}
+
+/* A muted line of explanation (a group Luck tie, no weapons, a skill CoC7 adds). */
+.rollbox-panel .rollbox-hint {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/*
+ * Lists with a tick box or radio per row (the Check menu's lists, the Item menu's weapons). Rows never shrink:
+ * in a column flex box with a max-height they would overlap instead of scrolling.
+ */
+.rollbox-panel .rollbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 230px;
+  overflow-y: auto;
+}
+
+.rollbox-panel .rollbox-list > * {
+  flex-shrink: 0;
+}
+
+.rollbox-panel .rollbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rollbox-panel .rollbox-row:hover {
+  background: var(--rollbox-cell);
+}
+
+/*
+ * Foundry draws radio buttons and tick boxes as Font Awesome glyphs in ::before / ::after, sized by
+ * --checkbox-size (20px, foundry2.css build 368), not by the input's own box. Without setting it to the
+ * input's 14px the glyph hangs 6px below each input, and the last one makes a list scroll early.
+ */
+.rollbox-panel .rollbox-row input,
+.rollbox-panel .rollbox-line input[type="checkbox"] {
+  --checkbox-size: 14px;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+/* Between a list's trained and untrained skills. */
+.rollbox-panel .rollbox-divider {
+  margin: 3px 0 1px;
+  padding-top: 3px;
+  border-top: 1px solid var(--rollbox-border);
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-10, 10px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Editable value line: plain text in a shaded box; the text itself has no box, border or outline. */
+.rollbox-panel .rollbox-value-box {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--rollbox-cell);
+  border-radius: 6px;
+}
+
+.rollbox-panel .rollbox-value-part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rollbox-panel .rollbox-value {
+  field-sizing: content;
+  min-width: 1ch;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  font-size: var(--font-size-22, 22px);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--rollbox-text-strong);
+  caret-color: var(--rollbox-accent);
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  cursor: text;
+}
+
+.rollbox-panel .rollbox-value:focus,
+.rollbox-panel .rollbox-value:focus-visible {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.rollbox-panel .rollbox-value.rollbox-value-invalid {
+  color: var(--rollbox-bad);
+}
+
+.rollbox-panel .rollbox-value-sep {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-22, 22px);
+  line-height: 1.2;
+}
+
+.rollbox-panel .rollbox-value-caption {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-10, 10px);
+}
+
+/* Custom button: full width; its pickers open under it. */
+.rollbox-panel .rollbox-dice-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rollbox-panel .rollbox-dice-toggle {
+  flex: none;
+  width: 100%;
+  padding: 4px;
+}
+
+.rollbox-panel .rollbox-dice-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  background: var(--rollbox-cell);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 6px;
+}
+
+/* Compact dice picker: − n + and the dice; + flat − n +, +DB, None. */
+.rollbox-panel .rollbox-dice {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-dice-label,
+.rollbox-panel .rollbox-dice-plus {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-dice-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Eight dice beside the stepper in the flyout's width: a size smaller, so "D100" fits. */
+.rollbox-panel .rollbox-dice-button {
+  padding: 2px 0;
+  font-size: var(--font-size-10, 10px);
+}
+
+.rollbox-panel .rollbox-dice-db,
+.rollbox-panel .rollbox-dice-none {
+  flex: none;
+  padding: 2px 6px;
+}
+
+.rollbox-panel .rollbox-dice-db {
+  margin-left: 6px;
+}
+
+.rollbox-panel .rollbox-dice-none {
+  margin-left: auto;
+}
+
+.rollbox-panel .rollbox-dice-plus {
+  flex: none;
+  margin-right: 4px;
+}
+
+.rollbox-panel .rollbox-dice-stepper {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+  border: 1px solid var(--rollbox-border);
+  border-radius: 5px;
+}
+
+.rollbox-panel .rollbox-dice-step {
+  flex: none;
+  padding: 1px 5px;
+  border: none;
+  background: transparent;
+}
+
+.rollbox-panel .rollbox-dice-count {
+  min-width: 12px;
+  text-align: center;
+  color: var(--rollbox-text-strong);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Difficulty and Dice rows with the tall Blind toggle beside them, spanning both. */
+.rollbox-panel .rollbox-how {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-how-rows {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Room for "Extreme" beside the Blind toggle. */
+.rollbox-panel .rollbox-how .rollbox-segment {
+  padding: 3px 2px;
+}
+
+.rollbox-panel .rollbox-blind {
+  flex: none;
+  width: 26px;
+  padding: 4px 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.06em;
+}
+

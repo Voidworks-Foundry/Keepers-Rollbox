@@ -1,0 +1,16 @@
+{
+  "name": "keepers-rollbox-tests",
+  "private": true,
+  "description": "Test harness only. Foundry ignores this file; it is not part of the module.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-reporter=spec",
+    "package": "node tools/release-tools.mjs package",
+    "smoke": "node tools/release-tools.mjs smoke",
+    "release-check": "node tools/release-tools.mjs release-check"
+  },
+  "devDependencies": {
+    "fflate": "^0.8.3",
+    "jsdom": "^24.0.0"
+  }
+}

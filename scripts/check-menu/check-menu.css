@@ -1,0 +1,89 @@
+/*
+ * Rollbox: the Check menu, inside the panel's flyout. Its buttons, tabs, lists with tick boxes, text boxes,
+ * lines, hints, sections, the Blind toggle, the status line and the action buttons are shared
+ * (shared/shared.css, loaded before this file); this file has what only the Check menu has.
+ * Scoped under .rollbox-panel so Foundry's own button and input styles don't apply.
+ */
+
+.rollbox-panel .rollbox-check-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-check-tab {
+  font-size: var(--font-size-12, 12px);
+}
+
+.rollbox-panel .rollbox-check-small {
+  flex: none;
+}
+
+.rollbox-panel .rollbox-check-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* "+ Add <typed name>": a button shaped like a list row. */
+.rollbox-panel .rollbox-check-add {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: left;
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-cell);
+  border: none;
+  box-shadow: none;
+}
+
+.rollbox-panel .rollbox-check-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-check-values {
+  flex: none;
+  color: var(--rollbox-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The value asked for a typed skill with no known base: a small box beside its hint. */
+.rollbox-panel .rollbox-check-other-value {
+  flex: none;
+  width: 56px;
+}
+
+/* The combined roll and group Luck buttons, as narrow as the Difficulty and Dice rows (shared.css). */
+.rollbox-panel .rollbox-check-options .rollbox-segment {
+  padding: 3px 2px;
+}
+
+.rollbox-panel .rollbox-check-other,
+.rollbox-panel .rollbox-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rollbox-panel .rollbox-check-hint {
+  font-style: italic;
+}
+
+.rollbox-panel .rollbox-check-error {
+  color: var(--rollbox-bad);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-check-error:empty {
+  display: none;
+}
+
+.rollbox-panel .rollbox-check-link i {
+  margin: 0;
+}
