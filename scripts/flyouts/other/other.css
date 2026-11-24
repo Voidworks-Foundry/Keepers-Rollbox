@@ -1,0 +1,129 @@
+/* What only the Other flyout's tabs, Item and Luck draw; shared controls are in shared.css. See docs/other-flyout.md.
+ * Scoped under .rollbox-panel so Foundry's own button, input and select styles don't apply. */
+
+/* The tab bar, like the Check flyout's. */
+.rollbox-panel .rollbox-other-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-other-tab {
+  font-size: var(--font-size-12, 12px);
+}
+
+/* Space under the tab bar, so the first line (a weapon note, a Luck line) doesn't sit against it. */
+.rollbox-panel .rollbox-other-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap);
+  padding-top: 8px;
+}
+
+/* Luck: each character's Luck, muted, then the Group Luck roll. */
+.rollbox-panel .rollbox-other-luck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.rollbox-panel .rollbox-other-luck-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 4px;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-other-luck-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-other-luck-value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A sheet without Luck (most creatures): left out of the roll, greyed. */
+.rollbox-panel .rollbox-other-luck-none {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.rollbox-panel .rollbox-other-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rollbox-panel .rollbox-other-hint {
+  font-style: italic;
+}
+
+
+/* A weapon with no skill set on its sheet can't be picked. */
+.rollbox-panel .rollbox-item-row:has(input:disabled),
+.rollbox-panel .rollbox-item-row:has(input:disabled) .rollbox-item-skill,
+.rollbox-panel .rollbox-item-row:has(input:disabled) .rollbox-item-values {
+  color: var(--rollbox-disabled);
+  cursor: default;
+}
+
+.rollbox-panel .rollbox-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rollbox-panel .rollbox-item-name,
+.rollbox-panel .rollbox-item-skill {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-item-skill,
+.rollbox-panel .rollbox-item-values {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-item-values {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Improvised weapon: under the list, in the same section */
+.rollbox-panel .rollbox-item-improvised {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Damage quick-picks: None and five dice in one row; less padding so "1D10+½DB" fits. */
+.rollbox-panel .rollbox-item-quick .rollbox-segment {
+  padding: 3px 0;
+  font-size: var(--font-size-10, 10px);
+  text-overflow: clip;
+}
+
+.rollbox-panel .rollbox-item-quick .rollbox-segment:first-child {
+  flex: 0.8;
+}
+
+/* The improvised weapon's skill and its values. */
+.rollbox-panel .rollbox-item-chosen {
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.rollbox-panel .rollbox-item-chosen:empty {
+  display: none;
+}

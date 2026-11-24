@@ -22,6 +22,7 @@ const GOOD_FILES = {
   "scripts/part/index.js": "const MODULE_ID = \"test-module\";\nexport const TEMPLATE = `modules/${MODULE_ID}/scripts/part/part.hbs`;\n",
   "scripts/part/part.hbs": "<div>{{name}}</div>\n",
   "scripts/part/part.css": ".test-part { color: red; }\n",
+  "LICENSE": "MIT License\n",
   "CHANGELOG.md": `# Changelog\n\n## ${VERSION}\n\n- New.\n\n## 1.2.2\n\n- Old.\n`,
   "tests/part.test.mjs": "export {};\n",
   "docs/part.md": "# part\n",
@@ -62,12 +63,12 @@ function assertProblem(problems, pattern) {
 }
 
 describe("package", () => {
-  test("zips module.json and scripts/ in one top folder named the id, and nothing that must not ship", () => {
+  test("zips module.json, LICENSE and scripts/ in one top folder named the id, and nothing that must not ship", () => {
     const { zipPath } = packageModule(makeModule());
     assert.equal(basename(zipPath), `${ID}-v${VERSION}.zip`);
     const names = Object.keys(unzipSync(readFileSync(zipPath))).filter((n) => !n.endsWith("/"));
     assert.deepEqual(names.sort(), [
-      `${ID}/module.json`, `${ID}/scripts/main.js`, `${ID}/scripts/part/index.js`,
+      `${ID}/LICENSE`, `${ID}/module.json`, `${ID}/scripts/main.js`, `${ID}/scripts/part/index.js`,
       `${ID}/scripts/part/part.css`, `${ID}/scripts/part/part.hbs`,
     ]);
   });

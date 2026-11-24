@@ -1,20 +1,18 @@
-/**
- * CoC7 helpers: every read or call of CoC7 that roll-requests makes outside its links, each guarded so a CoC7
- * change makes a request do nothing (with a warning) instead of throwing. Whether CoC7's links are there, its
- * internal link handler, a character's player owners, its request wording, its actor methods, and a read-only
- * copy of its skill lookup, so the Keeper is told before a request that CoC7 would drop.
- */
+/** Guarded reads and calls of CoC7 outside its links. See docs/roll-requests.md. */
 import { COC7_ID, escapeHtml, warn } from "../utils.js";
 import { comparable, isCocid } from "../skill-values/index.js";
 
-/** CoC7's link machinery is in place: the system is CoC7 and its link class is registered (`CoC7Link.init`). */
+/**
+ * Returns whether the system is CoC7 and its link class is registered.
+ * @returns {boolean}
+ */
 export function coc7LinksReady() {
   return game.system?.id === COC7_ID && typeof CONFIG?.CoC7Link?.documentClass === "function";
 }
 
 /**
- * CoC7's internal link handler (`CoC7Link._onLinkActorClick`), bound to its class: the one call that makes an
- * opposed card or an NPC's Sanity card for one actor. Null when it has gone.
+ * Returns CoC7's internal `CoC7Link._onLinkActorClick`, bound to its class, which makes a card for one given actor.
+ * @returns {Function|null} null when CoC7 no longer has it
  */
 export function linkActorClick() {
   const cls = globalThis.CONFIG?.CoC7Link?.documentClass;
@@ -22,8 +20,9 @@ export function linkActorClick() {
 }
 
 /**
- * The character's player owners (CoC7's `actor.owners`: non-GM users with OWNER). Empty for an NPC; null when
- * unreadable.
+ * Returns the character's player owners (CoC7's `actor.owners`, GMs left out).
+ * @param {Actor} actor
+ * @returns {User[]|null} empty for an NPC; null when unreadable
  */
 export function ownersOf(actor) {
   try {
@@ -34,7 +33,22 @@ export function ownersOf(actor) {
   }
 }
 
-/** CoC7's wording when it has it ("Your keeper has requested {name} make a {check} roll."), else the same in English. */
+/**
+ * Returns whether the user is one of the character's player owners.
+ * @param {Actor} actor
+ * @param {User} user
+ * @returns {boolean}
+ */
+export function playsFor(actor, user) {
+  return (ownersOf(actor) ?? []).some((owner) => owner === user || (owner?.id && owner.id === user?.id));
+}
+
+/**
+ * Returns CoC7's request sentence around a link, in English when CoC7's string is missing.
+ * @param {string} name escaped here
+ * @param {string} link
+ * @returns {string} HTML
+ */
 export function requestText(name, link) {
   const key = "CoC7.MessageTargetCheckRequested";
   const data = { name: escapeHtml(name), check: link };
@@ -42,7 +56,28 @@ export function requestText(name, link) {
   return `Your keeper has requested ${data.name} make a ${link} roll.`;
 }
 
-/** Calls an actor method of CoC7's, guarded. False (with a warning) when it's missing or throws. */
+/**
+ * Returns the first rolled result on a CoC7 check card (`game.CoC7.messageResults`), with `isSuccess`, `type`, `key`.
+ * @param {ChatMessage} message
+ * @returns {Promise<object|null>} null until rolled, or when unreadable
+ */
+export async function checkResult(message) {
+  try {
+    const results = await game.CoC7?.messageResults?.(message);
+    const list = Array.isArray(results) ? results : [results];
+    return list.find((result) => result?.isRolled === true) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calls one of CoC7's actor methods, guarded.
+ * @param {Actor} actor
+ * @param {string} method
+ * @param {...*} args
+ * @returns {Promise<boolean>} false, with a warning, when it is missing or throws
+ */
 export async function callActor(actor, method, ...args) {
   if (typeof actor?.[method] !== "function") {
     warn(`CoC7's actor.${method} is missing; ${actor?.name ?? "the character"} wasn't rolled.`);
@@ -52,30 +87,22 @@ export async function callActor(actor, method, ...args) {
     await actor[method](...args);
     return true;
   } catch (error) {
-    warn(`CoC7's actor.${method} failed for ${actor.name}: ${error?.message ?? error}`);
+    warn(`CoC7's actor.${method} failed for ${actor.name}.`, error);
     return false;
   }
 }
 
-/** CoC7's era filter on world and compendium skills (`getItemOrAdd`): untagged items are always allowed. */
 function eraAllows(item, era) {
   const eras = item?.flags?.[COC7_ID]?.cocidFlag?.eras;
   return !eras || !Object.keys(eras).length || Boolean(eras[era]);
 }
 
-/** The part of a skill name CoC7 compares (`guessNameParts`): the specialisation if there is one. */
 function coc7NamePart(name) {
   const match = String(name).match(/^([^(]+)\s*\((.+)\)$/);
   return comparable(match ? match[2] : name);
 }
 
-/**
- * Whether CoC7 will find a skill that isn't on the sheet, so it can add it when the check is rolled
- * (`getItemOrAdd`, `models/actor/document-class.js`): by CoC ID through `game.CoC7.cocid.fromCoCIDBest`
- * (exactly one match), otherwise by name in the world's items and then every Item compendium, skipping
- * skills tagged for other eras. Read-only. Null when CoC7's lookup can't be reached (Rollbox then
- * sends the request and leaves it to CoC7).
- */
+// CoC7 8.15: a read-only copy of `getItemOrAdd`'s lookup (by CoC ID, else by name and era); null when unknown.
 async function coc7FindsSkill(key) {
   try {
     if (isCocid(key)) {
@@ -99,14 +126,13 @@ async function coc7FindsSkill(key) {
     }
     return false;
   } catch (error) {
-    warn(`couldn't check whether CoC7 has the skill "${key}": ${error?.message ?? error}`);
+    warn(`couldn't check whether CoC7 has the skill "${key}".`, error);
     return null;
   }
 }
 
 /**
- * Before CoC7 is asked to add skills (a player's request, an opposed card): the names of missing skills
- * CoC7 can't find. CoC7 would otherwise do nothing when the link is clicked, or fail with "Unknown skill".
+ * Returns the names of a request's missing skills CoC7 can't find, which CoC7 would drop or fail on.
  * @param {object[]} checks resolved checks (resolve.js)
  * @returns {Promise<string[]>}
  */

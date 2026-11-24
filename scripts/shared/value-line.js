@@ -1,29 +1,25 @@
-/**
- * Editable value line: a large line of plain text the Keeper clicks and types into, with no box, border or
- * outline, only a cursor. It holds a value such as a Sanity loss ("1D6"), improvised damage ("1D6+DB") or
- * Assist's number to beat; the presets, quick-picks and the compact dice picker write into it, and typing
- * into it is read back by them. Enter or clicking away confirms: empty becomes 0, and a value the menu's rule
- * accepts is written back tidied ("1d6" → "1D6"). Text the rule refuses turns red, and `value` is null, so
- * the menu blocks Send. It builds text only; CoC7 and Foundry roll it.
- */
+/** The editable value line a flyout's presets, pickers and typing share. See docs/shared.md. */
 import { element } from "../utils.js";
 
-/** Typed dice tidied the way every menu writes them: no spaces, upper case, "1/2DB" written "½DB". */
+/**
+ * Tidies typed dice the way every flyout writes them: no spaces, upper case, "1/2DB" written "½DB".
+ * @param {string} text
+ * @returns {string}
+ */
 export function tidyDice(text) {
   return String(text ?? "").replace(/\s+/g, "").toUpperCase().replace(/1\/2DB/g, "½DB");
 }
 
 /**
- * A value line.
+ * Returns an editable value line that checks its text with the flyout's rule.
  * @param {object} options
- * @param {string} options.label what it is, read out (e.g. "SAN lost on a success").
- * @param {string} [options.value] the starting text.
- * @param {string} [options.empty] what an empty line stands for, and becomes on confirm ("0").
- * @param {(text: string) => string|null} [options.check] the menu's rule: the tidied value, or null to refuse.
- * @param {() => void} [options.onChange] after the Keeper types or confirms (not after set()).
+ * @param {string} options.label read out
+ * @param {string} [options.value] the starting text
+ * @param {string} [options.empty] what an empty line stands for, and becomes on confirm
+ * @param {(text: string) => string|null} [options.check] the tidied value, or null to refuse
+ * @param {() => void} [options.onChange] after typing or confirming, not after set()
  * @returns {{element: HTMLInputElement, readonly text: string, readonly value: string|null,
- *   set: (text: string) => void}} `text` is what the line shows; `value` is the checked value (an empty
- *   line counts as `empty`), or null while the rule refuses it.
+ *   set: (text: string) => void}} `value` is null while the rule refuses the text
  */
 export function valueLine({ label, value = "", empty = "0", check = (text) => text, onChange = () => {} } = {}) {
   const input = element("input", "rollbox-value");
@@ -37,7 +33,7 @@ export function valueLine({ label, value = "", empty = "0", check = (text) => te
     return check(text || empty);
   };
 
-  /** Red while the rule refuses the text; the width follows the text (CSS field-sizing does it too). */
+  // `size` is the fallback for CSS field-sizing.
   const mark = () => {
     const bad = read() === null;
     input.classList.toggle("rollbox-value-invalid", bad);
@@ -45,7 +41,6 @@ export function valueLine({ label, value = "", empty = "0", check = (text) => te
     input.size = Math.max(1, input.value.length);
   };
 
-  /** Enter or clicking away: empty becomes `empty`; an accepted value is written back tidied. */
   const confirm = () => {
     const checked = read();
     const shown = input.value.trim() ? (checked ?? input.value) : empty;
@@ -76,7 +71,6 @@ export function valueLine({ label, value = "", empty = "0", check = (text) => te
     get value() {
       return read();
     },
-    /** Show this text (a preset or the picker). Doesn't call onChange: the caller redraws. */
     set(text) {
       input.value = String(text ?? "");
       mark();
@@ -85,9 +79,10 @@ export function valueLine({ label, value = "", empty = "0", check = (text) => te
 }
 
 /**
- * One value line with a small caption under it ("success"), for a row such as the Sanity loss "0 / 1D6".
+ * Puts a small caption under a value line.
  * @param {{element: HTMLElement}} line
  * @param {string} caption
+ * @returns {HTMLElement}
  */
 export function captioned(line, caption) {
   const part = element("div", "rollbox-value-part");
@@ -96,8 +91,9 @@ export function captioned(line, caption) {
 }
 
 /**
- * The large line's box: the lines (or captioned parts) side by side, centred, with "/" between them.
+ * Puts value lines (or captioned parts) side by side in the shaded box, with "/" between them.
  * @param {HTMLElement[]} parts
+ * @returns {HTMLElement}
  */
 export function valueBox(parts) {
   const box = element("div", "rollbox-value-box");

@@ -1,7 +1,6 @@
 /**
- * Working out a request for one character: which skill, characteristic or attribute it means on this sheet, how
- * CoC7 knows it, its value for an NPC roll, a weapon's skill, the damage formula with this character's damage
- * bonus, the label, and the CoC7 link text. Skill matching itself is skill-values'. Reads the actor only.
+ * Works out a request for one character: its checks, label, damage and link; reads the actor only.
+ * See docs/roll-requests.md.
  */
 import { COC7_ID, numberOrNull } from "../utils.js";
 import {
@@ -9,27 +8,16 @@ import {
 } from "../skill-values/index.js";
 import { checkLink, cleanLabel, combinedLink, isSafeOption, isSafeRollKey, rollString } from "./links.js";
 
-const ATTRIBUTE_LABELS = Object.freeze({ lck: "Luck" });
-/** Damage formulas, once the damage bonus is filled in, may hold only dice and arithmetic. */
+const ATTRIBUTE_LABELS = Object.freeze({ lck: "Luck", san: "SAN" });
 const DICE_FORMULA = /^[0-9dD+\-*/() ]+$/;
-/** How a label or the Keeper's note names a difficulty in front of the check; Regular and Hidden add nothing. */
 const DIFFICULTY_WORDS = Object.freeze({ hard: "Hard ", extreme: "Extreme " });
 
-/**
- * A readable name for a CoC ID Rollbox's table doesn't have, so a label never reads "i.skill.…":
- * "i.skill.firearms-handgun" → "Firearms Handgun".
- */
+// "i.skill.firearms-handgun" → "Firearms Handgun", so a label never shows a CoC ID.
 function cocidName(cocid) {
   return String(cocid).replace(/^i\.skill\./, "").split("-").filter(Boolean)
     .map((word) => word[0].toUpperCase() + word.slice(1)).join(" ");
 }
 
-/**
- * A skill for one character. On the sheet: requested by the sheet's own CoC ID, else its name (CoC7
- * finds a renamed own language only by CoC ID). Missing: by Rollbox's table CoC ID, else the name, with
- * the value an NPC is rolled at: the table's base (Dodge and Language (Own) from this character), else
- * the request's value, else the group base. Without an actor (Copy link) it is the generic request.
- */
 function resolveSkill(actor, { name, cocid: givenCocid, value }) {
   // A weapon's stored skill can be a CoC ID instead of a name (`i.skill.throw`, CoC7's compendium weapons).
   const byCocid = isCocid(name);
@@ -37,6 +25,7 @@ function resolveSkill(actor, { name, cocid: givenCocid, value }) {
   const entry = tableSkill(byCocid ? "" : name, cocid);
   const item = actor ? sheetSkill(actor, name, cocid ?? entry?.cocid) : null;
   if (item) {
+    // CoC7 finds a renamed own language only by CoC ID; a table CoC ID would make it add a duplicate.
     const ownId = item.flags?.[COC7_ID]?.cocidFlag?.id;
     return { kind: "skill", display: item.name, onSheet: true, key: ownId || item.name, uuid: item.uuid,
       value: numberOrNull(item.system?.value) };
@@ -46,7 +35,12 @@ function resolveSkill(actor, { name, cocid: givenCocid, value }) {
     key: cocid ?? entry?.cocid ?? name, value: base ?? value ?? (byCocid ? null : groupBase(name)) };
 }
 
-/** One check for one character: what to call it, how CoC7 knows it, and its value for an NPC roll. */
+/**
+ * Returns one check for one character: its name, CoC7's key and its value for an NPC roll.
+ * @param {Actor|null} actor
+ * @param {object} check a check from requests.js
+ * @returns {object}
+ */
 export function resolveCheck(actor, check) {
   if (check.kind === "characteristic") {
     const row = characteristics(actor).find((c) => c.key === check.name);
@@ -57,7 +51,6 @@ export function resolveCheck(actor, check) {
   return { kind: "attribute", display: ATTRIBUTE_LABELS[check.name], key: check.name, value };
 }
 
-/** One of a weapon's stored skills (`{ id, name }`): the sheet skill with that id, else the stored name. */
 function storedSkill(actor, ref) {
   if (!ref) return null;
   const byId = ref.id ? Array.from(actor?.items ?? []).find((item) => item?.id === ref.id && item.type === "skill") : null;
@@ -65,12 +58,7 @@ function storedSkill(actor, ref) {
   return name ? { kind: "skill", name, cocid: byId?.flags?.[COC7_ID]?.cocidFlag?.id ?? null, value: null } : null;
 }
 
-/**
- * The weapon's skill. `which` "main" or "alternative" picks one; left out, it is the alternative when CoC7
- * says the weapon uses it (automatic, burst, thrown), else the main one. An alternative that isn't set
- * falls back to the main skill, as CoC7's own `skillAlternative` getter does (`models/item/weapon-system.js`).
- * @returns {{kind: "skill", name: string, cocid: string|null, value: null}|null} null when none is set.
- */
+// An alternative that isn't set falls back to the main skill, as CoC7 8.15's `skillAlternative` getter does.
 function weaponSkill(actor, weapon, which) {
   const skill = weapon?.system?.skill ?? {};
   const alternative = which === "alternative" || (which !== "main" && weapon?.system?.usesAlternativeSkill === true);
@@ -78,10 +66,10 @@ function weaponSkill(actor, weapon, which) {
 }
 
 /**
- * The skills the Item menu offers for a weapon, one row each: its main and its alternative skill when CoC7
- * says the weapon uses one (a knife that can be thrown: Fighting (Brawl) and Throw) and the two differ;
- * otherwise the one skill a request would use.
- * @returns {{which: "main"|"alternative", skill: object|null}[]} `skill` null when the weapon has none set.
+ * Returns the weapon's skills a flyout lists: main and alternative when CoC7 says it uses both and they differ.
+ * @param {Actor} actor
+ * @param {Item} weapon
+ * @returns {{which: "main"|"alternative", skill: object|null}[]} `skill` null when none is set
  */
 export function weaponSkills(actor, weapon) {
   const main = storedSkill(actor, weapon?.system?.skill?.main);
@@ -92,17 +80,12 @@ export function weaponSkills(actor, weapon) {
   return [{ which: alternative ? "alternative" : "main", skill: alternative ?? main }];
 }
 
-/** A damage bonus with its sign, as CoC7 adds it (`apps/chat-damage.js`): "+1D4", "-1", "+0". */
 function fullBonus(db) {
   const text = String(db ?? "").replace(/\s+/g, "").replace(/^\+/, "") || "0";
   return text.startsWith("-") ? text : `+${text}`;
 }
 
-/**
- * Half the damage bonus, for thrown weapons, the way CoC7 halves it (`CoC7Utilities.halfDB`): positive
- * numbers and dice sizes round down, negative numbers round away from zero ("1D4" → "+1D2", "-1" → "-1").
- * Text only; Foundry rolls the result.
- */
+// Halves as CoC7 8.15's `CoC7Utilities.halfDB`: positive numbers and dice sizes down, negatives away from zero.
 function halfBonus(db) {
   return fullBonus(db).replace(/([+-])(\d+)(?:d(\d+))?/gi, (match, sign, count, size) => {
     const half = (n) => (sign === "-" ? Math.ceil(n / 2) : Math.floor(n / 2));
@@ -110,15 +93,10 @@ function halfBonus(db) {
   });
 }
 
-/** A formula without its "+0" / "-0" terms ("1D6+0" → "1D6"), so a zero damage bonus isn't shown; "0" if nothing is left. */
 function withoutZeros(formula) {
   return formula.replace(/[+-]0+(?![0-9d])/gi, "") || "0";
 }
 
-/**
- * The damage formula with this character's damage bonus in place of `DB` / `½DB`, and no "+0" left in
- * it. Null when it isn't dice.
- */
 function damageFormula(damage, actor) {
   if (!damage) return null;
   const db = actor?.system?.attribs?.db?.value;
@@ -132,31 +110,25 @@ function damageFormula(damage, actor) {
 }
 
 /**
- * A damage formula as the Keeper writes it, before any character's damage bonus is known ("1D6+DB",
- * "1D4+½DB", "1D6+1D4"), checked by the same rule as when it is sent. For the Item menu's damage line.
+ * Returns a damage formula as the Keeper typed it ("1D6+DB"), checked by the rule used when it is sent.
  * @param {string} text
- * @returns {string|null} the formula with spaces removed, or null when it isn't a damage roll.
+ * @returns {string|null} without spaces, or null when it isn't a damage roll
  */
 export function damageText(text) {
   const formula = String(text ?? "").replace(/\s+/g, "");
   return formula && damageFormula(formula, null) ? formula : null;
 }
 
-/**
- * The label when the Keeper typed one: the check as CoC7 names it, then the Keeper's text, so the player
- * still sees what to roll. "Hard Spot Hidden · notice the knife"; combined, "Spot
- * Hidden + Listen · notice the knife". `text` is cleaned already.
- */
 function keeperLabel(checks, difficulty, text) {
   const names = cleanLabel(checks.map((c) => c.display).join(" + "));
-  return `${DIFFICULTY_WORDS[difficulty] ?? ""}${names} · ${text}`;
+  return `${DIFFICULTY_WORDS[difficulty] ?? ""}${names} · ${cleanLabel(text)}`;
 }
 
 /**
- * What a check-type request (check, weapon, improvised) means for one character: the resolved checks,
- * the label, the damage, and `note`: what the Keeper's note says for an NPC, whose private CoC7 card drops
- * the label. `{ error }` when it can't be sent to this character; `warning` when it goes without something
- * (a damage formula Foundry can't roll), for the sender to tell the Keeper.
+ * Returns what a check, weapon or improvised request means for one character, with the NPC note.
+ * @param {object} request
+ * @param {Actor} actor
+ * @returns {object} `{ error }` when it can't go to this character; `warning` when it goes without its damage
  */
 export function planCheck(request, actor) {
   const base = { difficulty: request.difficulty, dice: request.dice, blind: request.blind };
@@ -172,7 +144,7 @@ export function planCheck(request, actor) {
   const withDifficulty = (label) => ({ label, note: `${DIFFICULTY_WORDS[request.difficulty] ?? ""}${label}` });
   if (request.type === "weapon") {
     const weapon = Array.from(actor?.items ?? []).find((item) => item?.id === request.weaponId && item.type === "weapon");
-    if (!weapon) return { error: `${actor?.name ?? "Copy link"}: that weapon isn't on the sheet.` };
+    if (!weapon) return { error: `${actor?.name ?? "The character"}: that weapon isn't on the sheet.` };
     const skill = weaponSkill(actor, weapon, request.skill ?? undefined);
     if (!skill) return { error: `${actor.name}: the ${weapon.name} has no skill set on its sheet.` };
     const check = resolveCheck(actor, skill);
@@ -186,7 +158,11 @@ export function planCheck(request, actor) {
   return { ...plan, warning: `"${request.damage}" isn't a damage roll Foundry can make; the request goes without it.` };
 }
 
-/** The link text for a planned check or combined check. Null when a name can't go in a link. */
+/**
+ * Returns the link text for a planned check or combined check.
+ * @param {object} plan
+ * @returns {string|null} null when a name can't go in a link
+ */
 export function linkForPlan(plan) {
   if (plan.combined) {
     const rolls = plan.checks.map((check) => (isSafeRollKey(check.key)

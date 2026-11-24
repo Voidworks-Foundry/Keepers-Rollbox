@@ -1,0 +1,224 @@
+/* The Assist tab and the Assist card in chat. See docs/assist.md.
+ * Scoped under .rollbox-panel, except the chat card, which lives in Foundry's chat log. */
+
+/* Use and Against: characteristic tiles like the Check flyout's, each under its small label. */
+.rollbox-panel .rollbox-assist-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-assist-stat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rollbox-panel .rollbox-assist-stat-label {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-10, 10px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rollbox-panel .rollbox-assist-tiles .rollbox-check-tile {
+  padding: 4px 2px;
+}
+
+.rollbox-panel .rollbox-assist-tiles .rollbox-check-name {
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-11, 11px);
+  font-weight: 600;
+}
+
+/* Sized in rows, not pixels, so it follows the font size: each row is exactly --rollbox-row-height,
+ * and max-height is ten rows plus nine gaps. */
+.rollbox-panel .rollbox-assist-names {
+  --rollbox-row-height: calc(8px + 1.3 * var(--font-size-11, 11px));
+  --rollbox-row-gap: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-row-gap);
+  max-height: calc(10 * var(--rollbox-row-height) + 9 * var(--rollbox-row-gap));
+  overflow-y: auto;
+}
+
+.rollbox-panel .rollbox-assist-row {
+  flex: none;
+  height: var(--rollbox-row-height);
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-assist-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+  color: var(--rollbox-text);
+  background: var(--rollbox-cell);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 4px;
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-assist-name-who {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-assist-name-value {
+  flex: none;
+  color: var(--rollbox-text-muted);
+}
+
+/* The target and ✕ buttons: just wide enough for their glyph with normal padding; the name takes the rest. */
+.rollbox-panel .rollbox-assist-target,
+.rollbox-panel .rollbox-assist-remove {
+  flex: none;
+  width: auto;
+  padding: 3px 7px;
+  color: var(--rollbox-text-muted);
+}
+
+.rollbox-panel .rollbox-assist-target i,
+.rollbox-panel .rollbox-assist-remove i {
+  margin: 0;
+}
+
+.rollbox-panel .rollbox-assist-remove:hover {
+  color: var(--rollbox-bad);
+  border-color: var(--rollbox-bad);
+}
+
+/* A target: the row tinted coral. */
+.rollbox-panel .rollbox-assist-is-target .rollbox-assist-name,
+.rollbox-panel .rollbox-assist-is-target .rollbox-assist-target {
+  color: var(--rollbox-text-strong);
+  background: color-mix(in srgb, var(--rollbox-target) 30%, transparent);
+  border-color: var(--rollbox-target);
+}
+
+/* Result: Assisting, Rolling (names on the left, values on the right), then difficulty and chance. */
+.rollbox-panel .rollbox-assist-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--font-size-12, 12px);
+}
+
+.rollbox-panel .rollbox-assist-lists:empty {
+  display: none;
+}
+
+.rollbox-panel .rollbox-assist-heading {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-10, 10px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rollbox-panel .rollbox-assist-heading ~ .rollbox-assist-heading {
+  margin-top: 4px;
+}
+
+.rollbox-panel .rollbox-assist-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 6px;
+  color: var(--rollbox-text);
+}
+
+.rollbox-panel .rollbox-assist-line-who {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-assist-line-what {
+  flex: none;
+  color: var(--rollbox-text-muted);
+}
+
+.rollbox-panel .rollbox-assist-none {
+  color: var(--rollbox-text-muted);
+  font-style: italic;
+}
+
+.rollbox-panel .rollbox-assist-chance {
+  margin-top: 6px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  font-weight: 600;
+  color: var(--rollbox-text-strong);
+  background: color-mix(in srgb, var(--rollbox-accent) 22%, transparent);
+}
+
+.rollbox-panel .rollbox-assist-chance .rollbox-assist-line-what {
+  color: var(--rollbox-text-strong);
+}
+
+/* The Assist card in chat: plain, in the chat log's own colours. */
+.rollbox-assist-card .rollbox-assist-card-title {
+  margin: 0 0 4px;
+  font-size: var(--font-size-14, 14px);
+}
+
+.rollbox-assist-card p {
+  margin: 2px 0;
+}
+
+.rollbox-assist-card .rollbox-assist-card-label {
+  font-style: italic;
+}
+
+.rollbox-assist-card .rollbox-assist-card-note {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* The Keeper's add-a-character picker and a player's target button. */
+.rollbox-panel .rollbox-assist-add,
+.rollbox-panel .rollbox-assist-help {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.rollbox-panel .rollbox-assist-help {
+  justify-content: center;
+}
+
+/* A player's Assist: read only, the big title box, the lists, the one button. */
+.rollbox-panel .rollbox-assist-player {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rollbox-panel .rollbox-assist-player-head {
+  flex-direction: column;
+  align-items: center;
+}
+
+.rollbox-panel .rollbox-assist-player-title {
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-18, 18px);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.rollbox-panel .rollbox-assist-player-intro,
+.rollbox-panel .rollbox-assist-player-wait {
+  margin: 0;
+}

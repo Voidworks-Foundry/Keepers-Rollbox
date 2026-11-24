@@ -1,11 +1,11 @@
 # Recipe: support a new CoC7 version
 
-Rollbox talks to CoC7 only through its roll links, a few actor methods and its cards, but some of what it relies on is internal. After a CoC7 (or Foundry) update, recheck those before marking the new version as supported. Everything to recheck is listed in [DEVELOPING.md](../DEVELOPING.md), "Internal API registry".
+Rollbox talks to CoC7 only through its roll links, a few actor and item methods, its cards and its combat tracker's Draw gun, but some of what it relies on is internal (card flags and buttons, the link handler, the attack cards' Keeper-only toggles). After a CoC7 (or Foundry) update, recheck those before marking the new version as supported. Everything to recheck is listed in [DEVELOPING.md](../DEVELOPING.md), "Internal API registry".
 
 ## 1. Read what changed
 
 - CoC7's release notes and changelog for every version since the one in `module.json` (`relationships.systems`, `verified`).
-- Recover the new version's source from its `system.js` source map (DEVELOPING.md, "Reading CoC7's source"), into a scratch folder outside the repository. Do the same for the old version and compare the files the registry and "CoC7 integration" name: `apps/link.js`, `apps/roll-normalize.js`, `apps/check.js`, `apps/chat-combined-message.js`, `apps/chat-opposed-message.js`, `apps/san-check-card.js`, `apps/dice-pool.js`, `models/actor/document-class.js`, `models/item/weapon-system.js`, `hooks/render-chat-message-html.js`, and the `CoC7.MessageTargetCheckRequested` string in the English language file.
+- Recover the new version's source from its `system.js` source map (DEVELOPING.md, "Reading CoC7's source"), into a scratch folder outside the repository. Do the same for the old version and compare the files the registry and "CoC7 integration" name: `apps/link.js`, `apps/roll-normalize.js`, `apps/check.js`, `apps/chat-combined-message.js`, `apps/chat-opposed-message.js`, `apps/san-check-card.js`, `apps/dice-pool.js`, `models/actor/document-class.js`, `models/item/weapon-system.js`, `hooks/render-chat-message-html.js`; for combat and actions, the melee and ranged attack cards and their templates (`melee-initiator.hbs`, `melee-target.hbs`, `range-initiator.hbs`), the combat tracker's Draw gun (`CoC7Combat._onToggleGun`, `actor.rollInitiative`), the spell model's `cast`, the conditions (`conditionsSet`, `system.conditions`) and `game.CoC7.messageResults`; and the `CoC7.MessageTargetCheckRequested` and `CoC7.UnarmedWeaponName` strings in the English language file.
 
 ## 2. Go through the registry, row by row
 
@@ -23,7 +23,7 @@ npm test
 npm run release-check
 ```
 
-The tests use mocks, so they prove Rollbox's logic, not CoC7's: they pass even if CoC7 changed. The real check is in Foundry, with the new CoC7 version installed: the module loads with no red console lines; then, as the Keeper with one player logged in: a check (with Hidden difficulty and a label), a combined check, a group check with an NPC selected, a Sanity check for a player and an NPC, a weapon and an improvised weapon with damage, an opposed roll (player against NPC) and an Assist. Mark each registry row you saw working **Confirmed** with the date and what was seen.
+The tests use mocks, so they prove Rollbox's logic, not CoC7's: they pass even if CoC7 changed. The real check is in Foundry, with the new CoC7 version installed: the module loads with no red console lines; then, as the Keeper with one player logged in: a check (with Hidden difficulty and a label), a combined check, a group check with an NPC selected, a Sanity check for a player and an NPC, a weapon and an improvised weapon with damage, an opposed roll (player against NPC) and an Assist; from the Action flyout, an attack with Aiming and a bonus die set on CoC7's card, a reload, a maneuver and a spell cast; in an encounter, Draw gun set for a picked gun, Delay and End turn; with the Player Rollbox on, a player's opposed roll (through the Keeper's client) and the being-attacked alert's Dive for cover. Mark each registry row you saw working **Confirmed** with the date and what was seen.
 
 ## 4. Record it
 

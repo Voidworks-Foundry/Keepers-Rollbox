@@ -1,0 +1,249 @@
+/* What only the Opposed roll draws; shared controls are in shared.css. See docs/opposed-flyout.md.
+ * Scoped under .rollbox-panel so Foundry's button and input styles don't apply. */
+
+.rollbox-panel .rollbox-opposed-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap);
+}
+
+/* One side */
+.rollbox-panel .rollbox-opposed-side {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  background: var(--rollbox-cell);
+  border-radius: 6px;
+}
+
+.rollbox-panel .rollbox-opposed-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rollbox-panel .rollbox-opposed-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--rollbox-text-strong);
+  font-weight: 600;
+}
+
+/* The picked check in the side's header: "STR 40", at the header's right end. */
+.rollbox-panel .rollbox-opposed-pick {
+  flex: none;
+  margin-left: auto;
+  padding: 1px 8px;
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-bg-solid);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The side's role on CoC7's card: Attacker (left, first side) or Defender */
+.rollbox-panel .rollbox-opposed-role {
+  flex: none;
+  padding: 0 4px;
+  color: var(--rollbox-accent-text);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 3px;
+  font-size: var(--font-size-10, 10px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rollbox-panel .rollbox-opposed-side[data-role="defender"] .rollbox-opposed-role {
+  color: var(--rollbox-defender);
+}
+
+/* Between the sides: a larger Swap sides button, with a short rule each side of it */
+.rollbox-panel .rollbox-opposed-swap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rollbox-panel .rollbox-opposed-rule {
+  flex: 1;
+  border-top: 1px solid var(--rollbox-border);
+}
+
+.rollbox-panel .rollbox-opposed-swap-button {
+  flex: none;
+  padding: 5px 16px;
+  font-size: var(--font-size-13, 13px);
+  overflow: visible;
+}
+
+.rollbox-panel .rollbox-opposed-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-opposed-action {
+  padding: 5px 8px;
+  font-size: var(--font-size-12, 12px);
+}
+
+.rollbox-panel .rollbox-actions > .rollbox-opposed-primary {
+  flex: 2;
+}
+
+/* Rows are buttons with min-height 0, so in a column flex box they would shrink and overlap at max-height:
+ * nothing here may shrink; the list and the card scroll instead. */
+.rollbox-panel .rollbox-opposed-card > *,
+.rollbox-panel .rollbox-opposed-side > *,
+.rollbox-panel .rollbox-opposed-list > * {
+  flex-shrink: 0;
+}
+
+.rollbox-panel .rollbox-opposed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.rollbox-panel .rollbox-opposed-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 2px 6px;
+  font-size: var(--font-size-12, 12px);
+  line-height: 1.3;
+  text-align: left;
+  color: var(--rollbox-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.rollbox-panel .rollbox-opposed-row:hover {
+  background: var(--rollbox-cell);
+}
+
+.rollbox-panel .rollbox-opposed-row[aria-selected="true"] {
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-pressed);
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel .rollbox-opposed-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-opposed-row-value {
+  flex: none;
+  color: var(--rollbox-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rollbox-panel .rollbox-opposed-line {
+  flex-wrap: nowrap;
+}
+
+.rollbox-panel .rollbox-opposed-line .rollbox-line-label {
+  width: 34px;
+}
+
+.rollbox-panel .rollbox-opposed-hint {
+  margin: 0;
+  line-height: 1.35;
+  font-style: italic;
+}
+
+/* Footer: tie line, buttons, result (the section spacing is shared/shared.css) */
+.rollbox-panel .rollbox-opposed-tie {
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-result.rollbox-opposed-warning {
+  color: var(--rollbox-accent-text);
+}
+
+/* A side waiting for its character: the red line, and a player's Target your opponent button under it. */
+.rollbox-panel .rollbox-opposed-waiting {
+  margin: 0;
+  color: var(--rollbox-bad);
+}
+
+.rollbox-panel .rollbox-opposed-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* The Keeper's target pickers: in an empty side's header, and under a side of several. */
+.rollbox-panel .rollbox-opposed-pick-target,
+.rollbox-panel .rollbox-opposed-add {
+  flex: none;
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+}
+
+/* The ✕ after a name: empties the side, or takes one character off a side of several. */
+.rollbox-panel .rollbox-opposed-clear {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--rollbox-text-muted);
+}
+
+.rollbox-panel .rollbox-opposed-clear i {
+  margin: 0;
+  font-size: 11px;
+}
+
+.rollbox-panel .rollbox-opposed-clear:hover {
+  color: var(--rollbox-bad);
+  border-color: var(--rollbox-bad);
+}
+
+/* A side of several: one line per character with its ✕. */
+.rollbox-panel .rollbox-opposed-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rollbox-panel .rollbox-opposed-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 1px 2px 1px 6px;
+  color: var(--rollbox-text);
+}
+
+.rollbox-panel .rollbox-opposed-member-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

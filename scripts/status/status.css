@@ -1,0 +1,159 @@
+/*
+ * The status cards above the character sheet. See docs/status.md.
+ * Absolutely placed above the panel so the sheet, menu and flyouts keep their size and place.
+ */
+.rollbox-panel .rollbox-character-panel:has(> .rollbox-status-cards) {
+  position: relative;
+}
+
+.rollbox-panel .rollbox-status-cards {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 4px);
+  width: var(--rollbox-width, 200px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  --rollbox-status-serious: #f4a09a;
+  --rollbox-status-serious-bg: #4a2630;
+  --rollbox-status-rollbox: #e0b050;
+  --rollbox-status-rollbox-bg: #3a3320;
+}
+
+.rollbox-panel.rollbox-theme-light .rollbox-status-cards {
+  --rollbox-status-serious: #9e1f18;
+  --rollbox-status-serious-bg: #f2d3cf;
+  --rollbox-status-rollbox: #7a5a10;
+  --rollbox-status-rollbox-bg: #efe2bf;
+}
+
+.rollbox-panel .rollbox-status-card {
+  pointer-events: all;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--rollbox-bg);
+  border: 1px solid var(--rollbox-border);
+  border-radius: var(--rollbox-radius, 8px);
+  color: var(--rollbox-text);
+  font-size: var(--font-size-12, 12px);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.rollbox-panel .rollbox-status-card:hover {
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel .rollbox-status-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--rollbox-cell);
+}
+
+.rollbox-panel .rollbox-status-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.rollbox-panel .rollbox-status-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-status-by {
+  flex: none;
+  font-size: var(--font-size-10, 10px);
+  font-weight: 400;
+  color: var(--rollbox-text-muted);
+}
+
+.rollbox-panel .rollbox-status-serious {
+  color: var(--rollbox-status-serious);
+}
+
+.rollbox-panel .rollbox-status-serious .rollbox-status-icon {
+  background: var(--rollbox-status-serious-bg);
+}
+
+.rollbox-panel .rollbox-status-rollbox {
+  color: var(--rollbox-status-rollbox);
+}
+
+.rollbox-panel .rollbox-status-rollbox .rollbox-status-icon {
+  background: var(--rollbox-status-rollbox-bg);
+}
+
+/* The hover box, beside the card on the menu's side. */
+.rollbox-panel .rollbox-status-tip {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  left: calc(100% + 8px);
+  top: -6px;
+  width: 230px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background: var(--rollbox-bg-solid);
+  border: 1px solid var(--rollbox-border);
+  border-radius: var(--rollbox-radius, 8px);
+  box-shadow: 0 2px 8px #0008;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.rollbox-panel .rollbox-status-tip b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-12, 12px);
+}
+
+.rollbox-panel .rollbox-status-card:hover .rollbox-status-tip {
+  display: block;
+}
+
+.rollbox-panel.rollbox-menus-left .rollbox-status-tip {
+  left: auto;
+  right: calc(100% + 8px);
+}
+
+/* The Keeper's clear button on Rollbox's own states. */
+.rollbox-panel .rollbox-status-clear {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--rollbox-text-muted);
+  background: transparent;
+  border: 1px solid var(--rollbox-border);
+  border-radius: 50%;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.rollbox-panel .rollbox-status-clear:hover {
+  color: var(--rollbox-bad);
+  border-color: var(--rollbox-bad);
+}

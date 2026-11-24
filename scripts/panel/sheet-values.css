@@ -1,0 +1,60 @@
+/* The sheet's value buttons: Foundry's button style taken away, a pointer, hover and focus added. See docs/panel.md. */
+
+.rollbox-panel button.rollbox-characteristic,
+.rollbox-panel button.rollbox-stat {
+  height: auto;
+  min-height: 0;
+  width: auto;
+  margin: 0;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  box-shadow: none;
+  outline: none;
+  transition: none;
+  cursor: pointer;
+}
+
+.rollbox-panel button.rollbox-characteristic {
+  gap: 0;
+}
+
+/* A number on the two-character sheet: only the number is the button, so its colour (white or tan) stays its own. */
+.rollbox-panel button.rollbox-characteristic-value {
+  height: auto;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  box-shadow: none;
+  outline: none;
+  transition: none;
+  cursor: pointer;
+}
+
+/* SAN and Luck: the label line and the bar fill the box, as in the plain stat. */
+.rollbox-panel button.rollbox-stat {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+/* The hover highlight only on values that open something (the CoC7 themes draw their own). */
+.rollbox-panel button.rollbox-characteristic-value:hover,
+.rollbox-panel button.rollbox-characteristic:hover,
+.rollbox-panel button.rollbox-stat:hover {
+  background: color-mix(in srgb, var(--rollbox-accent) 20%, var(--rollbox-cell));
+}
+
+.rollbox-panel button.rollbox-characteristic-value:focus-visible,
+.rollbox-panel button.rollbox-characteristic:focus-visible,
+.rollbox-panel button.rollbox-stat:focus-visible {
+  outline: 2px solid var(--rollbox-accent);
+  outline-offset: 1px;
+}

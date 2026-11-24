@@ -4,10 +4,11 @@
   "description": "Test harness only. Foundry ignores this file; it is not part of the module.",
   "type": "module",
   "scripts": {
-    "test": "node --test --test-reporter=spec",
+    "test": "node --test --test-force-exit --test-reporter=spec",
     "package": "node tools/release-tools.mjs package",
     "smoke": "node tools/release-tools.mjs smoke",
-    "release-check": "node tools/release-tools.mjs release-check"
+    "release-check": "node tools/release-tools.mjs release-check",
+    "public-docs": "node tools/public-docs.mjs"
   },
   "devDependencies": {
     "fflate": "^0.8.3",

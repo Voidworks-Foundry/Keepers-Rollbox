@@ -1,6 +1,6 @@
 // Release tools: package the module into a zip, smoke-test that zip the way an installer opens it, and run the
 // release checks, so a release never depends on a hand-made zip. Nothing here is specific to one module: the id,
-// version and file paths all come from module.json, so this folder can be copied as-is to Void's other modules.
+// version and file paths all come from module.json, so this folder can be copied as-is to another module.
 // Run from the module folder's package.json: `npm run package`, `npm run smoke`, `npm run release-check`.
 // Dev tooling only: it lives in tools/, which never ships.
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -68,16 +68,20 @@ function walkFiles(dir, rel, out) {
   }
 }
 
+/** Top-level files every release ships when the module folder has them: the licence travels with each copy. */
+export const ALWAYS_SHIP = ["LICENSE"];
+
 /**
- * The files a release ships, relative to the module folder: `module.json` plus every top-level file or folder
- * that a module.json path lies in (for this module, `scripts/`). Anything in NEVER_SHIP and dot-files are left out.
+ * The files a release ships, relative to the module folder: `module.json`, the licence (ALWAYS_SHIP), plus every
+ * top-level file or folder that a module.json path lies in (for this module, `scripts/`). Anything in NEVER_SHIP and
+ * dot-files are left out.
  */
 export function shippedFiles(moduleDir, manifest) {
   const { files, packs } = manifestPaths(manifest);
   const roots = new Set([...files.map((f) => f.path), ...packs].map((path) => path.split("/")[0]));
-  const out = ["module.json"];
+  const out = ["module.json", ...ALWAYS_SHIP.filter((name) => existsSync(join(moduleDir, name)))];
   for (const root of [...roots].sort()) {
-    if (root === "module.json" || isNeverShip(root)) continue;
+    if (root === "module.json" || ALWAYS_SHIP.includes(root) || isNeverShip(root)) continue;
     const full = join(moduleDir, root);
     if (!existsSync(full)) continue; // the smoke test reports the missing path
     if (statSync(full).isDirectory()) walkFiles(full, root, out);

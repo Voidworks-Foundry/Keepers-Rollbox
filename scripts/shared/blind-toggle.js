@@ -1,15 +1,11 @@
-/**
- * Blind toggle: a tall button to the right of a menu's Difficulty and Dice rows, spanning both, with "Blind"
- * written sideways. Click it on (highlighted), click it off; the menu reads `on` into its request's blind
- * option. Used by shared/menu.js's howRows (the Check and Item menus).
- */
+/** The Blind toggle beside a flyout's Difficulty and Dice rows. See docs/shared.md. */
 import { element } from "../utils.js";
 
 /**
- * The toggle.
- * @param {{onChange?: (on: boolean) => void}} [options] after the Keeper clicks it.
- * @returns {{element: HTMLButtonElement, on: boolean, disabled: boolean}} `on` and `disabled` can be set by the
- *   menu (a combined check turns Blind off); setting them doesn't call onChange.
+ * Returns a Blind toggle button.
+ * @param {{onChange?: (on: boolean) => void}} [options]
+ * @returns {{element: HTMLButtonElement, on: boolean, disabled: boolean}} setting `on` or `disabled` doesn't call
+ *   onChange
  */
 export function blindToggle({ onChange = () => {} } = {}) {
   const node = element("button", "rollbox-btn rollbox-blind", "Blind");
@@ -41,9 +37,10 @@ export function blindToggle({ onChange = () => {} } = {}) {
 }
 
 /**
- * The rows (Difficulty, Dice) in a column with the toggle beside them, as tall as both.
+ * Lays the rows out in a column with the toggle beside them, as tall as all of them.
  * @param {HTMLElement[]} rows
  * @param {{element: HTMLElement}} toggle
+ * @returns {HTMLElement}
  */
 export function withBlind(rows, toggle) {
   const root = element("div", "rollbox-how");

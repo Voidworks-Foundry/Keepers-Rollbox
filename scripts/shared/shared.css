@@ -1,17 +1,17 @@
-/*
- * Rollbox: what every menu shares. Sections, the generic buttons, tabs and rows of buttons, lists with tick
- * boxes or radios, text boxes, labelled lines, hints and result lines (the classes shared/menu.js gives), the
- * status line, the action buttons, the editable value line, the compact dice picker and its Custom button,
- * and the Blind toggle. Loaded right after
- * mini-sheet.css and before every menu's own file (module.json), so a menu's own rule of the same weight wins.
- * Uses the panel's colour variables (mini-sheet.css), so it follows the Panel colour, transparency and size
- * settings. Scoped under .rollbox-panel so Foundry's own button and input styles don't apply.
- */
+/* What every flyout shares, scoped under .rollbox-panel. Loaded before every flyout's own file, so a flyout's
+ * rule of the same weight wins. See docs/shared.md. */
 
-/*
- * Placeholders and tick boxes in the theme's own colours: Foundry colours them from its interface theme, not the
- * panel's (its --input-placeholder-color and --checkbox-* variables, build 368 foundry2.css).
- */
+/* Foundry v14: its button transition and focus outline leave a fading copy of a cleared selection border.
+ * The keyboard's focus ring stays; a theme that animates its buttons overrides this with a stronger rule. */
+.rollbox-panel button {
+  transition: none;
+}
+
+.rollbox-panel button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Foundry v14: placeholders and tick boxes take its interface theme's colours unless these variables are set. */
 .rollbox-panel input,
 .rollbox-panel select,
 .rollbox-panel textarea {
@@ -29,21 +29,17 @@
   --checkbox-disabled-color: var(--rollbox-disabled);
 }
 
-/* Foundry's checked orange is for its dark look; on the Light theme a checked box takes the accent. */
+/* On the Light palette a checked box takes the accent instead of Foundry's orange. */
 .rollbox-panel.rollbox-theme-light input[type="checkbox"],
 .rollbox-panel.rollbox-theme-light input[type="radio"] {
   --checkbox-checked-color: var(--rollbox-accent);
 }
 
-/*
- * Anything hidden stays hidden, whatever `display` a rule gives it. [hidden] twice outweighs any rule of one
- * class under .rollbox-panel, so the menus need no [hidden] lists of their own.
- */
+/* [hidden] twice outweighs any one-class rule under .rollbox-panel, so nothing needs its own [hidden] rule. */
 .rollbox-panel [hidden][hidden] {
   display: none;
 }
 
-/* Sections: what, how, send. Clear space between them, no lines or headings. */
 .rollbox-panel .rollbox-section {
   display: flex;
   flex-direction: column;
@@ -54,8 +50,7 @@
   margin-top: 12px;
 }
 
-/* The muted line under a menu's title: who it is for. */
-.rollbox-panel .rollbox-menu-who {
+.rollbox-panel .rollbox-flyout-who {
   margin: -6px 0 0;
   overflow: hidden;
   white-space: nowrap;
@@ -64,13 +59,11 @@
   font-size: var(--font-size-11, 11px);
 }
 
-/* A small muted caption over a control ("Damage (optional)"). */
 .rollbox-panel .rollbox-caption {
   color: var(--rollbox-text-muted);
   font-size: var(--font-size-11, 11px);
 }
 
-/* Status line: in red, what is missing (the Opposed view's tie line is the only plain one). */
 .rollbox-panel .rollbox-status {
   margin: 0;
   color: var(--rollbox-text);
@@ -80,7 +73,6 @@
   color: var(--rollbox-bad);
 }
 
-/* Action buttons: the main one is highlighted, the others beside it. */
 .rollbox-panel .rollbox-actions {
   display: flex;
   gap: 3px;
@@ -105,14 +97,7 @@
   flex: 1.6;
 }
 
-.rollbox-panel .rollbox-actions > .rollbox-icon-action {
-  flex: 0 0 34px;
-}
 
-/*
- * What send() did, under the buttons: a heading ("Sanity check sent to:", "Rolled for you:", "Not sent:")
- * and one name per line under it, muted.
- */
 .rollbox-panel .rollbox-result {
   display: flex;
   flex-direction: column;
@@ -133,10 +118,6 @@
   padding-left: 8px;
 }
 
-/*
- * Generic buttons: tabs, rows of buttons where one is pressed, picks, the send buttons, and the dice picker's and
- * the Blind toggle's buttons (which keep only their own size and place below).
- */
 .rollbox-panel .rollbox-btn {
   flex: 1;
   min-width: 0;
@@ -172,7 +153,7 @@
   border-color: var(--rollbox-accent);
 }
 
-/* Greyed out: the theme's disabled text, not faded, so it stays readable (3:1). */
+/* The theme's disabled text colour rather than opacity, so it stays readable (3:1). */
 .rollbox-panel .rollbox-btn:disabled {
   color: var(--rollbox-disabled);
   cursor: default;
@@ -183,7 +164,6 @@
   gap: 3px;
 }
 
-/* A labelled line: "Difficulty" then its row of buttons. */
 .rollbox-panel .rollbox-line {
   display: flex;
   flex-wrap: wrap;
@@ -202,7 +182,6 @@
   font-size: var(--font-size-11, 11px);
 }
 
-/* Text boxes and drop-downs: search, label, cause, what the improvised weapon is. */
 .rollbox-panel .rollbox-input {
   box-sizing: border-box;
   width: 100%;
@@ -227,16 +206,12 @@
   background: var(--rollbox-bg-solid);
 }
 
-/* A muted line of explanation (a group Luck tie, no weapons, a skill CoC7 adds). */
 .rollbox-panel .rollbox-hint {
   color: var(--rollbox-text-muted);
   font-size: var(--font-size-11, 11px);
 }
 
-/*
- * Lists with a tick box or radio per row (the Check menu's lists, the Item menu's weapons). Rows never shrink:
- * in a column flex box with a max-height they would overlap instead of scrolling.
- */
+/* Rows never shrink: in a column flex box with a max-height they would overlap instead of scrolling. */
 .rollbox-panel .rollbox-list {
   display: flex;
   flex-direction: column;
@@ -262,11 +237,8 @@
   background: var(--rollbox-cell);
 }
 
-/*
- * Foundry draws radio buttons and tick boxes as Font Awesome glyphs in ::before / ::after, sized by
- * --checkbox-size (20px, foundry2.css build 368), not by the input's own box. Without setting it to the
- * input's 14px the glyph hangs 6px below each input, and the last one makes a list scroll early.
- */
+/* Foundry v14: tick-box glyphs are sized by --checkbox-size (20px), not the input. Set to the input's 14px,
+ * or the glyph hangs below the row and makes a list scroll early. */
 .rollbox-panel .rollbox-row input,
 .rollbox-panel .rollbox-line input[type="checkbox"] {
   --checkbox-size: 14px;
@@ -276,7 +248,6 @@
   margin: 0;
 }
 
-/* Between a list's trained and untrained skills. */
 .rollbox-panel .rollbox-divider {
   margin: 3px 0 1px;
   padding-top: 3px;
@@ -287,7 +258,6 @@
   letter-spacing: 0.04em;
 }
 
-/* Editable value line: plain text in a shaded box; the text itself has no box, border or outline. */
 .rollbox-panel .rollbox-value-box {
   display: flex;
   justify-content: center;
@@ -346,7 +316,6 @@
   font-size: var(--font-size-10, 10px);
 }
 
-/* Custom button: full width; its pickers open under it. */
 .rollbox-panel .rollbox-dice-custom {
   display: flex;
   flex-direction: column;
@@ -369,7 +338,6 @@
   border-radius: 6px;
 }
 
-/* Compact dice picker: − n + and the dice; + flat − n +, +DB, None. */
 .rollbox-panel .rollbox-dice {
   display: flex;
   flex-direction: column;
@@ -388,7 +356,7 @@
   gap: 2px;
 }
 
-/* Eight dice beside the stepper in the flyout's width: a size smaller, so "D100" fits. */
+/* A size smaller, so eight dice and the stepper fit the flyout's width. */
 .rollbox-panel .rollbox-dice-button {
   padding: 2px 0;
   font-size: var(--font-size-10, 10px);
@@ -437,7 +405,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Difficulty and Dice rows with the tall Blind toggle beside them, spanning both. */
 .rollbox-panel .rollbox-how {
   display: flex;
   align-items: stretch;
@@ -452,7 +419,7 @@
   gap: 5px;
 }
 
-/* Room for "Extreme" beside the Blind toggle. */
+/* Narrowed so the longest difficulty fits beside the Blind toggle. */
 .rollbox-panel .rollbox-how .rollbox-segment {
   padding: 3px 2px;
 }

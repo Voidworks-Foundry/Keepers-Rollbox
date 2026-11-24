@@ -1,0 +1,246 @@
+/* The setup check's notice and window, in the panel's palette so the themes draw them too. See docs/setup.md. */
+
+.rollbox-panel.rollbox-setup-notice,
+.rollbox-panel.rollbox-setup {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: calc(var(--z-index-window, 100) + 40);
+  width: auto;
+  margin: 0;
+  pointer-events: all;
+  color: var(--rollbox-text);
+  font-size: var(--font-size-12, 12px);
+}
+
+/* Below Foundry's notifications area. */
+.rollbox-panel.rollbox-setup-notice {
+  top: 64px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+  background: var(--rollbox-bg-solid);
+  border: 1px solid var(--rollbox-accent);
+  border-radius: var(--rollbox-radius, 8px);
+  box-shadow: 0 2px 10px #000a;
+}
+
+.rollbox-panel .rollbox-setup-notice-text b {
+  color: var(--rollbox-text-strong);
+}
+
+.rollbox-panel.rollbox-setup {
+  top: 12vh;
+  box-sizing: border-box;
+  width: 340px;
+  max-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--rollbox-bg-solid);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 18px #000c;
+}
+
+.rollbox-panel .rollbox-setup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rollbox-panel .rollbox-setup-title {
+  font-size: var(--font-size-14, 14px);
+  font-weight: 700;
+  color: var(--rollbox-text-strong);
+}
+
+.rollbox-panel .rollbox-setup-close,
+.rollbox-panel .rollbox-setup-dismiss {
+  flex: none;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.rollbox-panel .rollbox-setup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rollbox-panel .rollbox-setup-info {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.4;
+}
+
+.rollbox-panel .rollbox-setup-error {
+  color: var(--rollbox-bad);
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.4;
+}
+
+.rollbox-panel .rollbox-setup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-setup-row,
+.rollbox-panel .rollbox-setup-whorow {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: var(--rollbox-cell);
+}
+
+.rollbox-panel .rollbox-setup-whorow {
+  grid-template-columns: 24px 1fr auto;
+}
+
+.rollbox-panel .rollbox-setup-portrait {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--rollbox-border);
+  object-fit: cover;
+}
+
+.rollbox-panel .rollbox-setup-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.rollbox-panel .rollbox-setup-who b {
+  color: var(--rollbox-text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rollbox-panel .rollbox-setup-who i {
+  font-style: normal;
+  font-size: var(--font-size-11, 11px);
+  color: var(--rollbox-text-muted);
+}
+
+.rollbox-panel .rollbox-setup-count {
+  min-width: 22px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--rollbox-accent-text);
+}
+
+.rollbox-panel .rollbox-setup-count.rollbox-setup-ok {
+  color: var(--rollbox-text-strong);
+}
+
+.rollbox-panel .rollbox-setup-open {
+  padding: 2px 8px;
+  border-color: var(--rollbox-second, #d9b88a);
+}
+
+.rollbox-panel .rollbox-setup-step {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-setup-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+  max-width: 70%;
+}
+
+.rollbox-panel .rollbox-setup-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rollbox-track);
+}
+
+.rollbox-panel .rollbox-setup-dots i.rollbox-setup-dot-done {
+  background: var(--rollbox-text-muted);
+}
+
+.rollbox-panel .rollbox-setup-dots i.rollbox-setup-dot-on {
+  background: var(--rollbox-accent);
+}
+
+.rollbox-panel .rollbox-setup-issue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--rollbox-border);
+  border-radius: 6px;
+}
+
+.rollbox-panel .rollbox-setup-question {
+  font-weight: 700;
+  color: var(--rollbox-text-strong);
+}
+
+.rollbox-panel .rollbox-setup-choice {
+  display: flex;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-setup-choice .rollbox-btn {
+  flex: 1;
+}
+
+.rollbox-panel .rollbox-setup-choice .rollbox-btn[aria-checked="true"] {
+  border-color: var(--rollbox-accent);
+  background: var(--rollbox-pressed);
+}
+
+.rollbox-panel .rollbox-setup-foot {
+  display: flex;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-setup-foot .rollbox-btn {
+  flex: 1;
+  padding: 5px 4px;
+}
+
+.rollbox-panel .rollbox-setup-foot .rollbox-primary {
+  flex: 1.6;
+}
+
+.rollbox-panel .rollbox-setup-kindrow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: var(--rollbox-cell);
+}
+
+.rollbox-panel .rollbox-setup-kindhead {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 7px;
+}
+
+.rollbox-panel .rollbox-setup-kindrow .rollbox-setup-kind {
+  padding: 2px 4px;
+}

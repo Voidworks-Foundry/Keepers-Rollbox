@@ -1,0 +1,48 @@
+/* Which way a moved panel's menu and flyouts open; position.js sets the classes. See docs/panel.md. */
+
+/* Menu and flyout to the left of the character panel: the menu next to it, the flyout beyond. */
+.rollbox-panel.rollbox-menus-left .rollbox-side {
+  left: auto;
+  right: calc(100% + var(--rollbox-gap));
+  flex-direction: row-reverse;
+}
+
+/* Top half: line up with the card's top and grow down; the menu is pulled up by its extras (--rollbox-extras). */
+.rollbox-panel.rollbox-grow-down .rollbox-side {
+  top: 0;
+  bottom: auto;
+  align-items: flex-start;
+}
+
+.rollbox-panel.rollbox-grow-down .rollbox-menu {
+  margin-top: calc(-1 * var(--rollbox-extras, 0) * (var(--rollbox-button-height) + var(--rollbox-button-gap)));
+}
+
+/* With moving allowed, a header moves the panel; the open-sheet button keeps its pointer. */
+.rollbox-panel.rollbox-movable .rollbox-character-panel > .rollbox-card > .rollbox-sheet-head,
+.rollbox-panel.rollbox-movable .rollbox-character-panel > .rollbox-card > .rollbox-cards-head {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+/* The combat box drags from anywhere on it: no text selection while pressing; its plain parts show the hand. */
+.rollbox-panel.rollbox-movable .rollbox-character-panel > .rollbox-turn-order {
+  touch-action: none;
+  user-select: none;
+}
+
+.rollbox-panel.rollbox-movable .rollbox-character-panel > .rollbox-turn-order .rollbox-turn-header {
+  cursor: grab;
+}
+
+.rollbox-panel.rollbox-dragging,
+.rollbox-panel.rollbox-dragging .rollbox-character-panel > .rollbox-card > *,
+.rollbox-panel.rollbox-dragging .rollbox-character-panel > .rollbox-turn-order * {
+  cursor: grabbing;
+}
+
+/* The portrait in the header is an image: never start the browser's own image drag. */
+.rollbox-panel.rollbox-movable .rollbox-character-panel img {
+  -webkit-user-drag: none;
+}

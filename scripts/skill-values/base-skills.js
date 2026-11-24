@@ -1,17 +1,6 @@
-/**
- * Base skill values: the one table Rollbox uses for skills missing from a character's sheet.
- * Source: Keeper Rulebook, Chapter 4, skill list p. 56, with the specialisation lists on pp. 59
- * (Art and Craft), 64 (Fighting, Firearms) and 73-75 (Science). Uncommon skills (marked T on p. 56)
- * and Modern-era skills (marked Ω) are tagged for information only: every skill is always offered,
- * whatever the era, because games move between eras (Void's decision, 2026-11-13).
- *
- * Names are written the way CoC7's sheets and Skills compendium write them ("Art/Craft (Acting)",
- * "Firearms (Handgun)"), because requests go to CoC7 by name. `cocid` is CoC7's skill id, which is the
- * same in every language and is matched first. Differences from CoC7's compendium are listed in
- * docs/skill-values.md.
- */
-
-/** Base value worked out from a characteristic: Dodge is half DEX (p. 63), Language (Own) is EDU (p. 67). */
+/** Base skill values for skills missing from a sheet, from the Keeper Rulebook skill list (p. 56; specialisations
+ * pp. 59, 64, 73-75). Names are CoC7's, since requests go to CoC7 by name. See docs/skill-values.md. */
+// Dodge is half DEX (p. 63), Language (Own) is EDU (p. 67).
 const HALF_DEX = Object.freeze({ characteristic: "dex", divisor: 2 });
 const EDU = Object.freeze({ characteristic: "edu", divisor: 1 });
 
@@ -19,7 +8,7 @@ const skill = (name, base, cocid, extra = {}) => Object.freeze({ name, base, coc
 const UNCOMMON = { uncommon: true };
 const MODERN = { modern: true };
 
-/** Every skill on the p. 56 list that has a fixed name, A–Z. */
+/** Every skill on the rulebook's list that has a fixed name, A–Z, with its base and CoC ID. */
 export const BASE_SKILLS = Object.freeze([
   skill("Accounting", 5, "i.skill.accounting"),
   skill("Animal Handling", 5, "i.skill.animal-handling", UNCOMMON),
@@ -102,12 +91,7 @@ export const BASE_SKILLS = Object.freeze([
   skill("Track", 10, "i.skill.track")
 ]);
 
-/**
- * Skills the rulebook splits into specialisations a player names freely, with no fixed list
- * (p. 56, marked G). Their base applies to any specialisation found on a sheet, such as
- * "Language (Latin)" or "Pilot (Aircraft)". They are not offered as missing skills, because a request
- * needs a specialisation's name. Fighting and Firearms are not here: their base "varies" (p. 64).
- */
+/** The base of any freely named specialisation of these skill groups (p. 56, marked G), by lower-case group. */
 export const GROUP_BASES = Object.freeze({
   "art/craft": 5, // p. 59
   "language": 1, // Language (Other), p. 66

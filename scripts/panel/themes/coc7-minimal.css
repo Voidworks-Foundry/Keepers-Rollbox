@@ -1,0 +1,625 @@
+/* The CoC7 minimal theme: CoC7's compact dark investigator sheet over the same panel. See docs/panel.md.
+ * CoC7 8.15 keeps its colours in variables only inside its own windows (.application.coc7), so they are restated. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal {
+  --rollbox-min-display: customSheetFont, "Modesto Condensed", serif;
+  --rollbox-min-text: customSheetFont, "Lusitana", Georgia, serif;
+  --rollbox-min-ui: var(--font-primary, "Signika", sans-serif);
+  --rollbox-min-bar: #121211;
+  --rollbox-min-cream: #d5cdc1;
+  /* CoC7's red values (its sheet: #c0504d) lightened until they have 4.5:1 on the grey and on a characteristic's
+   * cell (WCAG AA), as every text colour of the palette does. */
+  --rollbox-min-red: #e07470;
+  --rollbox-min-open: #4a2626;
+  --rollbox-min-main: #8e2424;
+  --rollbox-min-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+
+  /* The palette every part's CSS uses (panel.css). Solid: Panel transparency and Panel colour are the Foundry theme's
+   * only. */
+  --rollbox-bg-solid: #252525;
+  --rollbox-bg: var(--rollbox-bg-solid);
+  --rollbox-border: #4a4a4a;
+  --rollbox-border-hover: #7a7a7a;
+  --rollbox-accent: #c0504d;
+  --rollbox-accent-text: #e58a84;
+  --rollbox-text: #e6e0d4;
+  --rollbox-text-strong: #ffffff;
+  --rollbox-text-muted: #aca69a;
+  --rollbox-placeholder: #9c968b;
+  --rollbox-disabled: #858077;
+  --rollbox-bad: #f4a09a;
+  --rollbox-target: #e8775d;
+  --rollbox-defender: #8fbfef;
+  --rollbox-second: #d9b88a;
+  --rollbox-box: #7d7a74;
+  --rollbox-cell: rgba(255, 255, 255, 0.05);
+  --rollbox-track: rgba(255, 255, 255, 0.1);
+  --rollbox-pressed: var(--rollbox-min-open);
+  --rollbox-bar-hp: #a54e4b;
+  --rollbox-bar-mp: #7a82a0;
+  --rollbox-bar-san: #4f7a3c;
+  --rollbox-bar-luck: #9a7032;
+  --rollbox-radius: 5px;
+
+  font-family: var(--rollbox-min-text);
+  color: var(--rollbox-text);
+}
+
+/* Cards, flyouts, status cards: flat dark grey, no border. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-card,
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-flyout,
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-status-card {
+  border-color: transparent;
+  box-shadow: var(--rollbox-min-shadow);
+}
+
+/* Character sheet: the black bar with the name, the token over its left edge. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet {
+  gap: 5px;
+  padding: 0 6px 6px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head {
+  position: relative;
+  gap: 6px;
+  min-height: 30px;
+  margin: 0 -6px;
+  padding: 2px 6px 2px 50px;
+  box-sizing: border-box;
+  background: var(--rollbox-min-bar);
+  border-radius: var(--rollbox-radius) var(--rollbox-radius) 0 0;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head .rollbox-portrait {
+  position: absolute;
+  z-index: 1;
+  left: 7px;
+  top: -9px;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--rollbox-min-bar);
+  box-shadow: 0 0 0 1px #6a6a6a;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head .rollbox-name {
+  font-family: var(--rollbox-min-ui);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: #fff;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head .rollbox-sub {
+  font-family: var(--rollbox-min-ui);
+  line-height: 1.15;
+  color: #b9b2a6;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head.rollbox-second .rollbox-name {
+  color: var(--rollbox-second);
+}
+
+/* The bottom character's bar on the two-character sheet closes the card. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-pair {
+  padding-bottom: 0;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-pair > .rollbox-sheet-head.rollbox-second {
+  border-radius: 0 0 var(--rollbox-radius) var(--rollbox-radius);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-pair > .rollbox-sheet-head.rollbox-second .rollbox-portrait {
+  top: auto;
+  bottom: -9px;
+}
+
+/* On the two-character sheet the portrait is the deselect button: the button takes the portrait's place over the bar. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head .rollbox-deselect {
+  position: absolute;
+  z-index: 1;
+  left: 7px;
+  top: -9px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-pair > .rollbox-sheet-head.rollbox-second .rollbox-deselect {
+  top: auto;
+  bottom: -9px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sheet-head .rollbox-deselect .rollbox-portrait {
+  position: static;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-open-sheet {
+  color: #efe6d8;
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.8;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-open-sheet:hover {
+  opacity: 1;
+  border-color: transparent;
+}
+
+/* HP, MP, SAN and Luck as label and value pairs: cream labels in the display font, red values. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-stats {
+  gap: 2px 10px;
+  padding: 2px 2px 0;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-stat {
+  padding: 0;
+  background: transparent;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-stat-label {
+  font-family: var(--rollbox-min-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--rollbox-min-cream);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-stat-value {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--rollbox-min-red);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-stat-bar {
+  display: none;
+}
+
+/* The characteristics as the sheet shows them: a grey label strip with the ◈ marker, the big red value with its half
+ * and fifth beside it. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristics {
+  gap: 3px 0;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic {
+  gap: 0;
+  padding: 0;
+  background: #2c2c2c;
+  border-radius: 0;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-label {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: var(--rollbox-min-display);
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--rollbox-min-cream);
+  background: #3a3a3a;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-label::before {
+  content: "◈";
+  font-size: 10px;
+  color: #e8e0d2;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-numbers {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 3px 2px 4px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-value {
+  font-weight: 400;
+  color: var(--rollbox-min-red);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-numbers .rollbox-characteristic-value {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-levels {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  line-height: 1.15;
+  color: var(--rollbox-min-red);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-pair-tile {
+  padding-bottom: 2px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-pair-tile .rollbox-characteristic-value {
+  font-size: 15px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-characteristic-value.rollbox-second {
+  color: var(--rollbox-second);
+}
+
+/* MOV · BUILD · DB along the bottom. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-derived {
+  display: flex;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-derived-label {
+  font-family: var(--rollbox-min-display);
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--rollbox-min-cream);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-derived-value {
+  margin-left: 4px;
+  font-size: 13px;
+  color: var(--rollbox-min-red);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal button.rollbox-characteristic:hover,
+.rollbox-panel.rollbox-theme-coc7-minimal button.rollbox-characteristic-value:hover {
+  background: #383838;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal button.rollbox-stat:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Character cards (three or more) */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-cards-title {
+  font-family: var(--rollbox-min-ui);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-cards-head {
+  font-family: var(--rollbox-min-display);
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--rollbox-min-cream);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-cards-value {
+  font-weight: 400;
+  color: var(--rollbox-min-red);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-character-card {
+  background: #2c2c2c;
+  border-radius: 3px;
+}
+
+/* Menu: flat dark buttons; the open one a dark red fill with a brighter icon. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-menu-button {
+  font-family: var(--rollbox-min-display);
+  font-size: 15px;
+  text-transform: uppercase;
+  color: var(--rollbox-min-cream);
+  background: var(--rollbox-bg);
+  border-color: transparent;
+  border-radius: var(--rollbox-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-menu-button i {
+  font-size: 17px;
+  color: #9a8f86;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-menu-button:hover {
+  color: #fff;
+  background: #313131;
+  border-color: transparent;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-menu-button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--rollbox-min-open);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-menu-button[aria-pressed="true"] i {
+  color: #f08a80;
+}
+
+/* Flyout: the black bar with the title, tabs and rows the sheet's way. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-flyout {
+  width: 330px;
+  padding: 0 10px 10px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-flyout-title {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 30px;
+  margin: 0 -10px;
+  padding: 0 9px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--rollbox-min-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--rollbox-min-bar);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-btn {
+  font-family: var(--rollbox-min-text);
+  font-size: 12px;
+  background: #2e2e2e;
+  border-color: #444;
+  border-radius: 3px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal :is(.rollbox-check-tabs, .rollbox-action-tabs, .rollbox-other-tabs,
+  .rollbox-opposed-tabs) {
+  gap: 6px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-tab {
+  flex: 0 1 auto;
+  padding: 2px 8px;
+  font-family: var(--rollbox-min-display);
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #9c968b;
+  background: transparent;
+  border-color: transparent;
+  border-radius: 3px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-tab:hover:not(:disabled) {
+  color: #fff;
+  border-color: transparent;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-tab[aria-selected="true"] {
+  color: #fff;
+  background: var(--rollbox-min-open);
+  border-color: transparent;
+}
+
+/* Foundry rings a clicked button (button:focus); a tab or menu button shows its state by its fill instead. Rollbox's
+ * controls are never reached with Tab, so only a click focuses them. */
+.rollbox-panel.rollbox-theme-coc7-minimal :is(.rollbox-tab, .rollbox-menu-button):focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-segment[aria-pressed="true"],
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-dice-button[aria-pressed="true"],
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-dice-toggle[aria-expanded="true"],
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-blind[aria-pressed="true"] {
+  color: #fff;
+  background: var(--rollbox-min-open);
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-primary:not(:disabled) {
+  color: #fff;
+  background: var(--rollbox-min-main);
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-primary:not(:disabled):hover {
+  background: #a42e2e;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-input {
+  font-family: var(--rollbox-min-text);
+  background: #1a1a1a;
+  border-color: transparent;
+  border-radius: 3px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-input:focus {
+  border-color: var(--rollbox-border-hover);
+}
+
+/* Every field label in one style: a line's label, a caption ("Target", "Damage (optional)"), Assist's Use and Against. */
+.rollbox-panel.rollbox-theme-coc7-minimal :is(.rollbox-line-label, .rollbox-caption) {
+  font-family: var(--rollbox-min-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--rollbox-min-cream);
+}
+
+/* Skill rows with a cream rule underneath and red values. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-list .rollbox-row {
+  border-bottom: 1px solid rgba(213, 205, 193, 0.7);
+  border-radius: 0;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-check-values {
+  color: var(--rollbox-min-red);
+}
+
+/* Group headings: small, with space above. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-divider {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: none;
+  font-family: var(--rollbox-min-display);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #aca69a;
+}
+
+/* Status cards. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-status-card {
+  font-family: var(--rollbox-min-text);
+  font-weight: 400;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-status-card:hover {
+  border-color: transparent;
+  background: #313131;
+}
+
+/* Combat order: black bar header, flat rows, the current turn outlined red all round. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-header {
+  min-height: 28px;
+  padding: 0 9px;
+  background: var(--rollbox-min-bar);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-title {
+  font-family: var(--rollbox-min-ui);
+  font-size: 13px;
+  color: #fff;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-current {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--rollbox-accent), var(--rollbox-min-shadow);
+}
+
+/* The rows above the full card in one group card, those below in another (as the character cards), each row a cell. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-rows {
+  padding: 4px;
+  background: var(--rollbox-bg);
+  box-shadow: var(--rollbox-min-shadow);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-rows .rollbox-cards-list {
+  --rollbox-row-gap: 3px;
+  overflow: visible;
+}
+
+/* The standing-by list scrolls past five rows (combat.css): half of this theme's 34px row each, the 2px round it
+   keeping the current turn's outline inside the scrolled box. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-rows .rollbox-turn-standing-list {
+  --rollbox-standing-row: 17px;
+  max-height: calc(5 * var(--rollbox-standing-row) + 4 * var(--rollbox-row-gap) + 4px);
+  margin: -2px;
+  padding: 2px;
+  overflow-y: auto;
+}
+
+/* The gap a little narrower than the character cards', so a long name keeps its room beside the meters. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-row-card {
+  --rollbox-row-height: 34px;
+  gap: 5px;
+  padding: 3px 4px;
+  overflow: visible;
+  background: #2c2c2c;
+  border-radius: 3px;
+}
+
+/* The current turn's row outlined all round too. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-row-card.rollbox-turn-current {
+  box-shadow: 0 0 0 1.5px var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-round-end {
+  background: var(--rollbox-bg);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-row-card .rollbox-who {
+  overflow: hidden;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-row-card .rollbox-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-controls {
+  box-sizing: border-box;
+  gap: 5px;
+  padding: 7px 8px;
+  background: var(--rollbox-bg);
+  border-radius: var(--rollbox-radius);
+  box-shadow: var(--rollbox-min-shadow);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-button {
+  font-family: var(--rollbox-min-text);
+  color: var(--rollbox-text);
+  background: #2e2e2e;
+  border: 1px solid #444;
+  border-radius: 3px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-button.rollbox-active {
+  color: #fff;
+  background: var(--rollbox-min-open);
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-rejoin {
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-turn-button.rollbox-confirm {
+  background: var(--rollbox-min-main);
+  border-color: var(--rollbox-accent);
+}
+
+/* Spacing: buttons whose serif labels need room. */
+
+/* Damage quick-picks and Sanity presets: a little inner room and one size down, so "1D10+DB" doesn't touch. */
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-item-quick .rollbox-segment,
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-sanity-preset {
+  padding: 0 2px;
+  font-size: 11px;
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-action-cast-hidden {
+  padding: 0 4px;
+}
+
+/* A spell's text (beside the flyout, or beside CoC7's casting window): flat grey, the black bar with the name. */
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-spell-text {
+  padding: 0 10px 10px;
+  border-color: transparent;
+  box-shadow: var(--rollbox-min-shadow);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-spell-text-title {
+  margin: 0 -10px;
+  padding: 7px 9px;
+  font-family: var(--rollbox-min-ui);
+  color: #fff;
+  background: var(--rollbox-min-bar);
+}
+
+/* The setup check's notice and window (setup/setup.css) */
+
+.rollbox-panel.rollbox-theme-coc7-minimal.rollbox-setup,
+.rollbox-panel.rollbox-theme-coc7-minimal.rollbox-setup-notice {
+  box-shadow: var(--rollbox-min-shadow);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-setup-title {
+  font-family: var(--rollbox-min-display);
+  font-size: var(--font-size-18, 18px);
+  font-weight: normal;
+}
+
+/* A fight's window and notices (combat/fight-boxes.js) */
+
+.rollbox-panel.rollbox-theme-coc7-minimal.rollbox-fight-window,
+.rollbox-panel.rollbox-theme-coc7-minimal.rollbox-fight-notice {
+  box-shadow: var(--rollbox-min-shadow);
+}
+
+.rollbox-panel.rollbox-theme-coc7-minimal .rollbox-fight-title {
+  font-family: var(--rollbox-min-display);
+  font-size: var(--font-size-18, 18px);
+  font-weight: normal;
+}

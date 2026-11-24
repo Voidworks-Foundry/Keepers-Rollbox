@@ -1,0 +1,28 @@
+/* The targeting prompt: outside the panel, so in Foundry's own colours. See docs/player.md. */
+.rollbox-targeting {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-cool-3, #5d6577);
+  border-radius: 4px;
+  background: var(--color-cool-5, #1e1e2a);
+  color: var(--color-light-1, #f0f0e0);
+  font-size: var(--font-size-14, 14px);
+}
+
+#interface > .rollbox-targeting,
+body > .rollbox-targeting {
+  position: fixed;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-index-tooltip, 100);
+  pointer-events: auto;
+}
+
+.rollbox-targeting-cancel {
+  flex: none;
+  width: auto;
+  line-height: 1.5;
+}

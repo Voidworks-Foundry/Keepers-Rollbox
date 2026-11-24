@@ -1,0 +1,209 @@
+/* What only the Check flyout and its Sanity tab draw; shared controls are in shared.css. See docs/check-flyout.md.
+ * Scoped under .rollbox-panel so Foundry's own button and input styles don't apply. */
+
+.rollbox-panel .rollbox-check-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-check-tab {
+  font-size: var(--font-size-12, 12px);
+}
+
+.rollbox-panel .rollbox-check-small {
+  flex: none;
+}
+
+.rollbox-panel .rollbox-check-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* The add-skill row: a button shaped like a list row. */
+.rollbox-panel .rollbox-check-add {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: left;
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-cell);
+  border: none;
+  box-shadow: none;
+}
+
+.rollbox-panel .rollbox-check-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-check-values {
+  flex: none;
+  color: var(--rollbox-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The value asked for a typed skill with no known base: a small box beside its hint. */
+.rollbox-panel .rollbox-check-other-value {
+  flex: none;
+  width: 56px;
+}
+
+/* The combined roll buttons, as narrow as the Difficulty and Dice rows (shared.css). */
+.rollbox-panel .rollbox-check-options .rollbox-segment {
+  padding: 3px 2px;
+}
+
+.rollbox-panel .rollbox-check-other {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rollbox-panel .rollbox-check-hint {
+  font-style: italic;
+}
+
+.rollbox-panel .rollbox-check-error {
+  color: var(--rollbox-bad);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-check-error:empty {
+  display: none;
+}
+
+
+/* Tiles: minmax(0, 1fr) columns and ellipsis on long names, so the tiles never widen the flyout. */
+.rollbox-panel .rollbox-check-tiles {
+  display: grid;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-check-tiles-characteristic {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.rollbox-panel .rollbox-check-tiles-skill {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rollbox-panel .rollbox-check-tiles > .rollbox-check-add,
+.rollbox-panel .rollbox-check-tiles > .rollbox-divider {
+  grid-column: 1 / -1;
+}
+
+.rollbox-panel .rollbox-check-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 3px 2px;
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.2;
+  color: var(--rollbox-text);
+  background: var(--rollbox-cell);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.rollbox-panel .rollbox-check-tile:hover {
+  border-color: var(--rollbox-border);
+}
+
+.rollbox-panel .rollbox-check-tile[aria-pressed="true"] {
+  background: var(--rollbox-pressed);
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel .rollbox-check-tile .rollbox-check-name {
+  flex: none;
+  max-width: 100%;
+  text-align: center;
+}
+
+.rollbox-panel .rollbox-check-tiles-characteristic .rollbox-check-name {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-10, 10px);
+}
+
+.rollbox-panel .rollbox-check-tile-value {
+  color: var(--rollbox-text-strong);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rollbox-panel .rollbox-check-tile .rollbox-check-values {
+  font-size: var(--font-size-10, 10px);
+}
+
+/* The Sanity tab: each character's SAN, muted, under the title (in place of the names line) */
+.rollbox-panel .rollbox-sanity-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: -6px;
+  gap: 1px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.rollbox-panel .rollbox-sanity-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-sanity-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-sanity-value {
+  flex: none;
+  color: var(--rollbox-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Presets: two rows of four */
+.rollbox-panel .rollbox-sanity-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-sanity-preset {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The clear button beside the combined roll row. */
+.rollbox-panel .rollbox-check-clear {
+  flex: none;
+  width: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rollbox-panel .rollbox-check-clear i {
+  margin: 0;
+  font-size: 11px;
+}

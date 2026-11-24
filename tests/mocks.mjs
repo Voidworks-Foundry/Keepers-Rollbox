@@ -32,7 +32,7 @@ export function addStyles(...files) {
   }
 }
 
-/** A menu's result area as the Keeper reads it: each heading and each line, in order. */
+/** A flyout's result area as the Keeper reads it: each heading and each line, in order. */
 export function resultText(area) {
   return [...area.querySelectorAll(".rollbox-result-heading, .rollbox-result-line")].map((node) => node.textContent);
 }
@@ -40,11 +40,29 @@ export function resultText(area) {
 export function makeEnv({ isGM = true, values = {}, coc7 = {} } = {}) {
   const hooks = {}; const registered = {}; const chat = []; const reads = [];
   globalThis.Hooks = {
-    // Foundry returns an id for Hooks.off; here the function itself serves as the id.
+    // Foundry returns an id for Hooks.off; here the function itself (or once's wrapper) serves as the id.
     on: (n, f) => { (hooks[n] ??= []).push(f); return f; },
-    once: (n, f) => { (hooks[n] ??= []).push(f); return f; },
+    // Like Foundry, a once hook runs on the first call only and is removed (a new array, so a loop over it goes on).
+    once: (n, f) => {
+      const wrapper = (...a) => {
+        if (wrapper.done) return undefined;
+        wrapper.done = true;
+        hooks[n] = (hooks[n] ?? []).filter((g) => g !== wrapper);
+        return f(...a);
+      };
+      (hooks[n] ??= []).push(wrapper);
+      return wrapper;
+    },
     off: (n, f) => { hooks[n] = (hooks[n] ?? []).filter((g) => g !== f); },
-    call: (n, ...a) => (hooks[n] ?? []).forEach((f) => f(...a))
+    // Like Foundry, Hooks.call stops at the first handler that returns false, and says so.
+    call: (n, ...a) => {
+      for (const f of [...(hooks[n] ?? [])]) if (f(...a) === false) return false;
+      return true;
+    },
+    callAll: (n, ...a) => {
+      for (const f of [...(hooks[n] ?? [])]) f(...a);
+      return true;
+    }
   };
   const users = [
     { id: "gm1", isGM: true, isSelf: isGM },
@@ -64,6 +82,12 @@ export function makeEnv({ isGM = true, values = {}, coc7 = {} } = {}) {
           throw new Error(`${ns}.${k} is not a registered game setting`);
         }
         reads.push(k); return k in values ? values[k] : registered[k].default;
+      },
+      // A saved value is read back by get, and the setting's onChange runs, as in Foundry.
+      set: async (ns, k, v) => {
+        values[k] = v;
+        registered[k]?.onChange?.(v);
+        return v;
       }
     }
   };

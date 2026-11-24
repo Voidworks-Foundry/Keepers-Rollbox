@@ -1,0 +1,337 @@
+/*
+ * What only the Action flyout has; shared controls are in shared/shared.css. See docs/action-flyout.md.
+ * Scoped under .rollbox-panel so Foundry's own button and input styles don't apply.
+ */
+
+.rollbox-panel .rollbox-action {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap);
+}
+
+/* A spent character. Act buttons are greyed on their own: an ancestor's opacity would keep Override grey on hover. */
+.rollbox-panel .rollbox-action .rollbox-action-greyed,
+.rollbox-panel .rollbox-action .rollbox-action-greyed-button:not(.rollbox-action-override),
+.rollbox-panel .rollbox-action .rollbox-action-greyed-button.rollbox-action-override:not(:hover) {
+  opacity: 0.55;
+}
+
+.rollbox-panel .rollbox-action-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-action-tab {
+  font-size: var(--font-size-12, 12px);
+}
+
+/* The target box */
+.rollbox-panel .rollbox-action-target {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-action-target-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-action-target-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rollbox-panel .rollbox-action-target-name {
+  color: var(--rollbox-target);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-action-target-facts,
+.rollbox-panel .rollbox-action-weapon-skill,
+.rollbox-panel .rollbox-action-weapon-values,
+.rollbox-panel .rollbox-action-sub,
+.rollbox-panel .rollbox-action-effect {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-action-small {
+  flex: none;
+  width: auto;
+  padding: 2px 6px;
+  font-size: var(--font-size-11, 11px);
+}
+
+/* The target box's status lines. */
+.rollbox-panel .rollbox-action-effect {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.rollbox-panel .rollbox-action-effect-name {
+  color: var(--rollbox-text);
+}
+
+.rollbox-panel .rollbox-action-effect-serious .rollbox-action-effect-name {
+  color: var(--rollbox-bad);
+}
+
+.rollbox-panel .rollbox-action-effect-rollbox .rollbox-action-effect-name {
+  color: var(--rollbox-defender);
+}
+
+.rollbox-panel .rollbox-action-effect-dice {
+  flex: none;
+  text-align: right;
+}
+
+.rollbox-panel .rollbox-action-net,
+.rollbox-panel .rollbox-action-net .rollbox-action-effect-name {
+  color: var(--rollbox-text-strong);
+}
+
+.rollbox-panel .rollbox-action-waiting,
+.rollbox-panel .rollbox-action-warning,
+.rollbox-panel .rollbox-action-impossible {
+  color: var(--rollbox-bad);
+}
+
+/* Weapon and spell rows. */
+.rollbox-panel .rollbox-action-weapon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  text-align: left;
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.rollbox-panel .rollbox-action-weapon:disabled,
+.rollbox-panel .rollbox-action-weapon:disabled .rollbox-action-weapon-skill,
+.rollbox-panel .rollbox-action-weapon:disabled .rollbox-action-weapon-values {
+  color: var(--rollbox-disabled);
+  cursor: default;
+}
+
+.rollbox-panel .rollbox-action-weapon-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rollbox-panel .rollbox-action-weapon-name,
+.rollbox-panel .rollbox-action-weapon-skill {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-panel .rollbox-action-weapon-values,
+.rollbox-panel .rollbox-action-ammo {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.rollbox-panel .rollbox-action-ammo-empty {
+  color: var(--rollbox-bad);
+}
+
+.rollbox-panel .rollbox-action-improvised {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* In combat, the gun's Reload line under Attack. */
+.rollbox-panel .rollbox-action-reload-line > button {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+
+.rollbox-panel .rollbox-action-skill,
+.rollbox-panel .rollbox-action-build {
+  justify-content: space-between;
+}
+
+.rollbox-panel .rollbox-action-mp {
+  color: var(--rollbox-bar-mp);
+  font-variant-numeric: tabular-nums;
+}
+
+.rollbox-panel .rollbox-action-spell-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rollbox-panel .rollbox-action-spell-buttons {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* A spell the investigator hasn't cast yet. */
+.rollbox-panel .rollbox-action-spells .rollbox-row.rollbox-action-spell-row.rollbox-action-first-casting {
+  outline: none;
+  border: 1px solid var(--rollbox-accent);
+  border-radius: 4px;
+}
+
+/* Spell text on click. */
+.rollbox-panel .rollbox-action-spell-row.rollbox-action-spell-clickable {
+  cursor: pointer;
+}
+
+/* A spell's text, never cut: the box scrolls instead. */
+.rollbox-panel .rollbox-spell-text {
+  pointer-events: all;
+  box-sizing: border-box;
+  width: 320px;
+  max-height: calc(70vh / var(--rollbox-scale, 1));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  color: var(--rollbox-text);
+  background: var(--rollbox-bg);
+  border: 1px solid var(--rollbox-accent);
+  border-radius: var(--rollbox-radius, 6px);
+  font-size: var(--font-size-12, 12px);
+  line-height: 1.4;
+}
+
+.rollbox-panel .rollbox-spell-text-title {
+  margin: 0;
+  padding: 0;
+  border: none;
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-13, 13px);
+  font-weight: 600;
+}
+
+.rollbox-panel .rollbox-spell-text-body p {
+  margin: 0 0 6px;
+}
+
+.rollbox-panel .rollbox-spell-text-foot {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* Rollbox's box beside CoC7's casting window, above the window's level. */
+.rollbox-panel.rollbox-spell-cast-host {
+  position: fixed;
+  z-index: calc(var(--z-index-window, 100) + 50);
+  width: auto;
+  margin: 0;
+}
+
+.rollbox-panel.rollbox-spell-cast-host:empty {
+  display: none;
+}
+
+.rollbox-panel.rollbox-spell-cast-host .rollbox-spell-text {
+  max-height: 80vh;
+}
+
+/*
+ * The picked weapon. The selector outweighs the themes' row rules; a border, not an outline, so the scrolling
+ * list doesn't cut it off.
+ */
+.rollbox-panel .rollbox-action-weapons .rollbox-row.rollbox-action-weapon.rollbox-action-weapon-picked {
+  align-items: flex-start;
+  outline: none;
+  border: 1px solid var(--rollbox-accent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--rollbox-text) 9%, var(--rollbox-cell));
+}
+
+.rollbox-panel .rollbox-action-weapon-detail {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.35;
+  white-space: normal;
+}
+
+/* A goal this character can't try now. */
+.rollbox-panel .rollbox-segment.rollbox-action-goal-greyed {
+  opacity: 0.55;
+}
+
+/* Maneuver's goals: two rows of three, so every label fits. */
+.rollbox-panel .rollbox-segmented.rollbox-action-goals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  flex: 1;
+}
+
+.rollbox-panel .rollbox-action-restrain {
+  margin-top: 4px;
+  width: 100%;
+}
+
+/* Two selected: who acts, and Swap. */
+.rollbox-panel .rollbox-action-pair {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.rollbox-panel .rollbox-action-acting {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rollbox-panel .rollbox-action-acting-name {
+  overflow: hidden;
+  color: var(--rollbox-text-strong);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rollbox-panel .rollbox-action-swap {
+  flex: none;
+}
+
+/* The Keeper's prompt when a sheet lacks what an action needs. */
+.rollbox-panel .rollbox-action-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--rollbox-accent);
+  border-radius: 6px;
+}
+
+.rollbox-panel .rollbox-action-prompt b {
+  color: var(--rollbox-text-strong);
+}
+
+/* An NPC's or creature's attacks left this round. */
+.rollbox-panel .rollbox-action-attacks {
+  margin: 0;
+  text-align: right;
+}
+
+/* The Keeper's Override buttons on a spent character. */
+.rollbox-panel .rollbox-btn.rollbox-action-override:hover {
+  border-color: var(--rollbox-bad);
+  color: var(--rollbox-bad);
+}

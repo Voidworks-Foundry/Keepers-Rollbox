@@ -1,0 +1,128 @@
+/*
+ * The flyout alert. See docs/alert-flyout.md.
+ * Rollbox's own host box wears `rollbox-panel` for the palette, but none of the panel's place.
+ */
+.rollbox-panel.rollbox-alert-host {
+  position: fixed;
+  left: 16px;
+  bottom: 140px;
+  z-index: calc(var(--z-index-window, 100) - 1);
+  width: auto;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap, 8px);
+}
+
+.rollbox-panel.rollbox-alert-host:empty {
+  display: none;
+}
+
+.rollbox-panel .rollbox-alert {
+  pointer-events: all;
+  box-sizing: border-box;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap, 8px);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--rollbox-accent) 22%, var(--rollbox-bg-solid));
+  border: 1.5px solid var(--rollbox-accent);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px #000a;
+}
+
+.rollbox-panel .rollbox-alert-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rollbox-panel .rollbox-alert-title {
+  flex: 1;
+  margin: 0;
+  border: none;
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-14, 14px);
+  font-weight: 700;
+}
+
+.rollbox-panel .rollbox-alert-close {
+  flex: 0 0 22px;
+  padding: 0;
+}
+
+.rollbox-panel .rollbox-alert-sub,
+.rollbox-panel .rollbox-alert-note,
+.rollbox-panel .rollbox-alert-build {
+  margin: 0;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-panel .rollbox-alert-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-alert-actions .rollbox-btn {
+  padding: 6px 4px;
+  font-weight: 600;
+}
+
+.rollbox-panel .rollbox-alert-goals,
+.rollbox-panel .rollbox-alert-weapons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+/* Weapon names are often long, so two to a row. */
+.rollbox-panel .rollbox-alert-weapons {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.rollbox-panel .rollbox-alert-goals[hidden],
+.rollbox-panel .rollbox-alert-weapons[hidden] {
+  display: none;
+}
+
+.rollbox-panel .rollbox-alert-weapons .rollbox-btn {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rollbox-panel .rollbox-alert-build {
+  grid-column: 1 / -1;
+}
+
+.rollbox-panel .rollbox-alert-line {
+  margin: 0;
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* The four answers are short, so they share one row evenly. */
+.rollbox-panel .rollbox-alert-actions .rollbox-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Counter: the maneuver weapons to pick from, then the goals. */
+.rollbox-panel .rollbox-alert-counter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rollbox-panel .rollbox-alert-counter[hidden] {
+  display: none;
+}
+
+.rollbox-panel .rollbox-alert-weapons .rollbox-btn.rollbox-alert-picked {
+  border-color: var(--rollbox-accent);
+  box-shadow: inset 0 0 0 1px var(--rollbox-accent);
+  color: var(--rollbox-text-strong);
+}

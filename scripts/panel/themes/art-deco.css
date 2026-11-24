@@ -1,0 +1,903 @@
+/* The Art Deco theme: CoC7's decorated investigator sheet over the same panel. See docs/panel.md.
+ * CoC7 8.15 keeps its colours and fonts in variables only inside its own windows, so each is restated with its source. */
+
+.rollbox-panel.rollbox-theme-art-deco {
+  /* CoC7: --investigator-sheet-primary-font and --investigator-sheet-secondary-font. */
+  --rollbox-deco-display: customSheetFont, "Modesto Condensed", serif;
+  --rollbox-deco-text: customSheetFont, "Lusitana", Georgia, serif;
+  --rollbox-deco-ui: var(--font-primary, "Signika", sans-serif);
+  /* CoC7 dark: --color-labels, --color-window-decoration, --color-active; the gold of the portrait frame. */
+  --rollbox-deco-label: #b44849;
+  --rollbox-deco-name: #c0504d;
+  --rollbox-deco-window: #274914;
+  --rollbox-deco-active: #ffffaa;
+  --rollbox-deco-gold: #b08a3e;
+  --rollbox-deco-main: #922d2e;
+  --rollbox-deco-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+  /* The page texture with its own colour under it while it loads. */
+  --rollbox-deco-page: #242422 var(--rollbox-coc7-page) 0 0 / 650px;
+
+  /* The palette every part's CSS uses (panel.css), in CoC7's dark sheet colours. Solid: Panel transparency and Panel
+   * colour are the Foundry theme's only. */
+  --rollbox-bg-solid: #242422;
+  --rollbox-bg: var(--rollbox-bg-solid);
+  --rollbox-border: #6a6458;
+  --rollbox-border-hover: #a89e8a;
+  --rollbox-accent: #c0504d;
+  --rollbox-accent-text: #e58a84;
+  --rollbox-text: #e6e0d4;
+  --rollbox-text-strong: #fbf6ea;
+  --rollbox-text-muted: #bfb39c;
+  --rollbox-placeholder: #a89e8a;
+  --rollbox-disabled: #8a8475;
+  --rollbox-bad: #f4a09a;
+  --rollbox-target: #e8775d;
+  --rollbox-defender: #8fbfef;
+  --rollbox-second: #d9b88a;
+  --rollbox-box: #8d8a7a;
+  --rollbox-cell: rgba(255, 255, 255, 0.1);
+  --rollbox-track: rgba(255, 255, 255, 0.12);
+  --rollbox-pressed: rgba(255, 255, 170, 0.14);
+  /* CoC7 dark: --color-hp, --color-mp, --color-sanity, --color-luck (its base colours mixed with white). */
+  --rollbox-bar-hp: #a54e4b;
+  --rollbox-bar-mp: #7a82a0;
+  --rollbox-bar-san: #4f7a3c;
+  --rollbox-bar-luck: #9a7032;
+
+  font-family: var(--rollbox-deco-text);
+  color: var(--rollbox-text);
+}
+
+/* Cards, flyouts, status cards and alerts: CoC7's dark page. */
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-card,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-status-card,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-alert {
+  background: var(--rollbox-deco-page);
+  border-color: transparent;
+  box-shadow: var(--rollbox-deco-shadow);
+}
+
+/* The character panel sits in front of the menu, so the ribbons come out from behind it. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-character-panel {
+  position: relative;
+  z-index: 2;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-side {
+  z-index: 1;
+}
+
+/* Character sheet. */
+
+/* CoC7's red worn line along the top and bottom of the card, edge to edge. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet {
+  gap: 5px;
+  padding: 0 6px;
+  overflow: hidden;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet::before,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet::after {
+  content: "";
+  flex: none;
+  height: 7px;
+  margin: 0 -6px;
+  background: var(--rollbox-coc7-line-red) left top / 1500px 7px no-repeat;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet::after {
+  background-position: right top;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet-head {
+  gap: 8px;
+  padding: 0 2px;
+}
+
+/* The token in a gold ring. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-portrait {
+  border: 2px solid var(--rollbox-deco-gold);
+  box-shadow: 0 0 0 2px #242422, 0 0 0 3px #8d8a7a;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-portrait-small {
+  border: 1.5px solid var(--rollbox-deco-gold);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-name {
+  font-family: var(--rollbox-deco-text);
+  font-weight: 400;
+}
+
+/* Every character name about 10% under CoC7's sheet size, so the serif names fit the 200px card. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet-head .rollbox-name {
+  color: var(--rollbox-deco-name);
+  font-size: 15.3px;
+  line-height: 1.1;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet-head .rollbox-sub {
+  color: var(--rollbox-text-muted);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-second .rollbox-name,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sheet-head.rollbox-second .rollbox-name {
+  color: var(--rollbox-second);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-open-sheet {
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.85;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-open-sheet:hover {
+  opacity: 1;
+  border-color: transparent;
+}
+
+/* HP · MP · SAN · Luck: CoC7's blocks, coloured label, current value, then the coloured band with the tentacles. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat {
+  --rollbox-deco-stat: var(--rollbox-bar-hp);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  background: var(--rollbox-cell);
+  border-radius: 6px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-mp { --rollbox-deco-stat: var(--rollbox-bar-mp); }
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-san { --rollbox-deco-stat: var(--rollbox-bar-san); }
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-luck { --rollbox-deco-stat: var(--rollbox-bar-luck); }
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-line {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding-top: 1px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-label {
+  font-family: var(--rollbox-deco-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--rollbox-deco-stat) 70%, #fff);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-value {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--rollbox-text-strong);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-of,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-bar {
+  display: none;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-stat-band {
+  display: block;
+  height: 38px;
+  padding-top: 1px;
+  box-sizing: border-box;
+  font-size: 15px;
+  line-height: 1.1;
+  color: #fff;
+  background: var(--rollbox-deco-stat) var(--rollbox-coc7-tentacles) center bottom / 32px auto no-repeat;
+}
+
+/* The eight characteristics: the label in the display font, then a light rounded box with the value and its half
+ * and fifth stacked beside it, the same space either side. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-characteristics {
+  gap: 0 2px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-characteristic {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-characteristic-label {
+  font-family: var(--rollbox-deco-display);
+  font-size: 16px;
+  line-height: 1.05;
+  color: var(--rollbox-deco-label);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-characteristic-numbers {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 0 1px 4px;
+  padding: 3px 0;
+  background: var(--rollbox-cell);
+  border-radius: 5px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-characteristic-numbers .rollbox-characteristic-value {
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-characteristic-levels {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--rollbox-text-strong);
+}
+
+/* The two-character sheet: each tile's two values in the light box, the bottom one tan. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-pair-tile {
+  margin: 0 1px 3px;
+  padding-bottom: 2px;
+  background: var(--rollbox-cell);
+  border-radius: 5px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-pair-tile .rollbox-characteristic-value {
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.rollbox-panel.rollbox-theme-art-deco button.rollbox-characteristic:hover,
+.rollbox-panel.rollbox-theme-art-deco button.rollbox-stat:hover,
+.rollbox-panel.rollbox-theme-art-deco button.rollbox-characteristic-value:hover {
+  background: transparent;
+  filter: brightness(125%);
+}
+
+.rollbox-panel.rollbox-theme-art-deco button.rollbox-stat:hover,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-pair-tile button.rollbox-characteristic-value:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Character cards (three or more) */
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-cards-title {
+  font-family: var(--rollbox-deco-display);
+  font-size: 17px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-cards-head {
+  font-family: var(--rollbox-deco-display);
+  font-size: 14px;
+  color: var(--rollbox-deco-label);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-cards-value {
+  font-weight: 400;
+}
+
+/* The Investigators panel and the character cards: the green tentacle line along the bottom, as the turn controls. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-cards:not(.rollbox-turn-rows) {
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-cards:not(.rollbox-turn-rows)::after {
+  content: "";
+  flex: none;
+  height: 34px;
+  margin: -4px -8px 0;
+  background: var(--rollbox-coc7-ornament-green) right bottom / 900px 34px no-repeat;
+}
+
+/* Menu: CoC7's ribbons, coming out sideways from behind the card. */
+
+/*
+ * The button keeps its box and place; its ribbon is CoC7's tab image turned a quarter to run sideways (the image
+ * hangs down, its forked end at the top), drawn from behind the card (48px: the gap and 40px more, so no gap ever
+ * shows) to the button's end, behind the label. Closed ribbons are dimmed (CoC7's 65%); the open one and the hovered
+ * one brighten and slide out a little.
+ */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button {
+  --rollbox-ribbon: var(--rollbox-coc7-ribbon-red);
+  --rollbox-ribbon-behind: 48px;
+  /* How far the ribbon runs past the button's end, so its forked tail starts after the longest label. */
+  --rollbox-ribbon-past: 16px;
+  position: relative;
+  justify-content: center;
+  padding-left: 6px;
+  font-family: var(--rollbox-deco-display);
+  font-size: 18px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 2px 2px 4px #000;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  filter: brightness(65%);
+  transition: transform 0.1s, filter 0.1s;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: calc(50% - (56px + var(--rollbox-ribbon-behind) + var(--rollbox-ribbon-past)) / 2);
+  left: calc((56px + var(--rollbox-ribbon-past) - var(--rollbox-ribbon-behind)) / 2 - var(--rollbox-button-height) / 2);
+  width: var(--rollbox-button-height);
+  height: calc(56px + var(--rollbox-ribbon-behind) + var(--rollbox-ribbon-past));
+  background: var(--rollbox-ribbon) center / 100% 100% no-repeat;
+  transform: rotate(90deg);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu.rollbox-menu-fill .rollbox-menu-button::before {
+  width: calc((var(--rollbox-sheet-height) - (var(--rollbox-buttons, 3) - 1) * var(--rollbox-button-gap))
+    / var(--rollbox-buttons, 3));
+  left: calc((56px + var(--rollbox-ribbon-past) - var(--rollbox-ribbon-behind)) / 2
+    - (var(--rollbox-sheet-height) - (var(--rollbox-buttons, 3) - 1) * var(--rollbox-button-gap))
+    / var(--rollbox-buttons, 3) / 2);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button[data-menu="check"] {
+  --rollbox-ribbon: var(--rollbox-coc7-ribbon-green);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button[data-menu="other"] {
+  --rollbox-ribbon: var(--rollbox-coc7-ribbon-yellow);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button[data-menu="opposed"] {
+  --rollbox-ribbon: var(--rollbox-coc7-ribbon-blue);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button i {
+  display: none;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button:hover,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button[aria-pressed="true"] {
+  color: #fff;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: translateX(6px);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-menu-button[aria-pressed="true"] {
+  color: var(--rollbox-deco-active);
+}
+
+/* Menu and flyouts to the left of the card (position.css): the ribbons come out to the left. */
+.rollbox-panel.rollbox-theme-art-deco.rollbox-menus-left .rollbox-menu-button {
+  padding-left: 0;
+  padding-right: 6px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco.rollbox-menus-left .rollbox-menu-button::before {
+  left: calc((56px + var(--rollbox-ribbon-behind) - var(--rollbox-ribbon-past)) / 2 - var(--rollbox-button-height) / 2);
+  transform: rotate(-90deg);
+}
+
+.rollbox-panel.rollbox-theme-art-deco.rollbox-menus-left .rollbox-menu-button:hover,
+.rollbox-panel.rollbox-theme-art-deco.rollbox-menus-left .rollbox-menu-button[aria-pressed="true"] {
+  transform: translateX(-6px);
+}
+
+/* Flyout: green window bar, the zigzag ornament with the heading under its peak, the tentacle line. */
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout {
+  width: 340px;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 6px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout-title {
+  order: -2;
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 30px;
+  margin: 0 -12px;
+  padding: 0 9px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--rollbox-deco-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--rollbox-deco-window);
+}
+
+/* The flyout's heading (the open tab: SKILL, LUCK, ATTACK…; else its menu, e.g. OPPOSED) centred inside the raised part
+   under the ornament's peak. menu-host.js keeps it in data-heading. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout::before {
+  content: attr(data-heading);
+  order: -1;
+  flex: none;
+  height: 44px;
+  margin: 2px -12px -4px;
+  padding-top: 15px;
+  box-sizing: border-box;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: var(--rollbox-deco-display);
+  font-size: 21px;
+  line-height: 1;
+  color: var(--rollbox-text);
+  background: var(--rollbox-coc7-ornament-top) calc(50% + 10.7px) 0 / 1000px 30px no-repeat;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout::after {
+  content: "";
+  flex: none;
+  height: 40px;
+  margin: -6px -12px 0;
+  background: var(--rollbox-coc7-ornament-green) right bottom / 1050px 40px no-repeat;
+}
+
+/*
+ * Action, Check and Other start with their tabs: no title bar, no heading under the peak and no name line; the tab
+ * row sits in the dip under the ornament's peak (drawn larger here, so the Check flyout's three tabs fit between its
+ * walls). Who it goes to stays on the send button, which also says when a check is combined (check/index.js
+ * `data-combined`). The Check flyout's Sanity list and its "No one selected" note come after the tabs. Opposed keeps
+ * its title bar and heading: its tabs belong to each side, inside that side's box.
+ */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout:is([data-menu="action"], [data-menu="check"], [data-menu="other"]) {
+  --rollbox-deco-dip: 36px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout:is([data-menu="action"], [data-menu="check"], [data-menu="other"])
+  > .rollbox-flyout-title,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout:is([data-menu="action"], [data-menu="check"], [data-menu="other"])
+  > .rollbox-flyout-body > p.rollbox-flyout-who {
+  display: none;
+}
+
+/* The ornament alone, laid under the tab row (the flyout's gap taken back too, so the row starts where it does). */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout:is([data-menu="action"], [data-menu="check"], [data-menu="other"])::before {
+  content: "";
+  height: var(--rollbox-deco-dip);
+  margin: 8px -12px calc(-8px - var(--rollbox-deco-dip));
+  padding: 0;
+  background: var(--rollbox-coc7-ornament-top) calc(50% + 11.5px) 0 / 1150px 34.5px no-repeat;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout[data-menu="check"] > .rollbox-flyout-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout[data-menu="check"] > .rollbox-flyout-body
+  > .rollbox-section:has(> .rollbox-check-tabs) {
+  order: -1;
+  margin-top: 0;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout[data-menu="check"] > .rollbox-flyout-body
+  > :is(.rollbox-sanity-list, .rollbox-everyone-note) {
+  margin-top: 8px;
+}
+
+/* The tabs between the dip's walls, level with the ornament's lines; the ornament is their rule, so no dashed one. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout:is([data-menu="action"], [data-menu="check"], [data-menu="other"])
+  :is(.rollbox-check-tabs, .rollbox-action-tabs, .rollbox-other-tabs) {
+  align-items: center;
+  gap: 10px;
+  height: var(--rollbox-deco-dip);
+  padding: 13px 0 0;
+  box-sizing: border-box;
+  border-bottom: none;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout:is([data-menu="action"], [data-menu="check"], [data-menu="other"])
+  .rollbox-tab {
+  padding: 0 3px;
+  line-height: 1.1;
+}
+
+/* A combined check (two or more ticked) says so on its send button, as the title did. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout[data-menu="check"] .rollbox-check-action[data-combined]::before {
+  content: "Combined · ";
+}
+
+/* Buttons and boxes: CoC7's sheet buttons, thin and light. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-btn {
+  font-family: var(--rollbox-deco-text);
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+}
+
+/* Tabs in the display font, centred over a dashed rule; the open tab pale yellow with a glow, no box. */
+.rollbox-panel.rollbox-theme-art-deco :is(.rollbox-check-tabs, .rollbox-action-tabs, .rollbox-other-tabs,
+  .rollbox-opposed-tabs) {
+  justify-content: center;
+  gap: 12px;
+  padding-bottom: 2px;
+  border-bottom: 1px dashed var(--rollbox-border);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-tab {
+  flex: 0 1 auto;
+  padding: 1px 4px;
+  font-family: var(--rollbox-deco-display);
+  font-size: 17px;
+  text-transform: uppercase;
+  color: #a89e8a;
+  background: transparent;
+  border-color: transparent;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-tab:hover:not(:disabled) {
+  color: var(--rollbox-text-strong);
+  border-color: transparent;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-tab[aria-selected="true"] {
+  color: var(--rollbox-deco-active);
+  text-shadow: 0 0 8px #e6e0d4;
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Foundry rings a clicked button (button:focus); a tab or ribbon shows its state by its own colour instead. Rollbox's
+ * controls are never reached with Tab, so only a click focuses them. */
+.rollbox-panel.rollbox-theme-art-deco :is(.rollbox-tab, .rollbox-menu-button):focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-segment[aria-pressed="true"],
+.rollbox-panel.rollbox-theme-art-deco .rollbox-dice-button[aria-pressed="true"],
+.rollbox-panel.rollbox-theme-art-deco .rollbox-dice-toggle[aria-expanded="true"],
+.rollbox-panel.rollbox-theme-art-deco .rollbox-blind[aria-pressed="true"] {
+  color: var(--rollbox-deco-active);
+  background: var(--rollbox-pressed);
+  border-color: var(--rollbox-accent);
+}
+
+/* The main button: CoC7 red with the display font. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-primary:not(:disabled) {
+  font-family: var(--rollbox-deco-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--rollbox-deco-main);
+  border-color: #c48a7a;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--rollbox-deco-main) 80%, #fff);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-input {
+  font-family: var(--rollbox-deco-text);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+  border-radius: 4px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-input:focus {
+  border-color: var(--rollbox-border-hover);
+}
+
+/*
+ * Every field label in one style: the display font in capitals, CoC7's label red (a line's "Difficulty", a caption
+ * such as "Target" or "Damage (optional)", Assist's Use and Against).
+ */
+.rollbox-panel.rollbox-theme-art-deco :is(.rollbox-line-label, .rollbox-caption) {
+  font-family: var(--rollbox-deco-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--rollbox-accent-text);
+}
+
+/* Group headings ("Untrained · base value"): small, in the display font, with space above. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-divider {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: none;
+  font-family: var(--rollbox-deco-display);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-flyout-who,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-hint {
+  font-family: var(--rollbox-deco-text);
+}
+
+/* Status cards, alerts. */
+
+/* The status cards as the character card: CoC7's page, the red worn line along the top, the sheet's fonts. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-status-card {
+  font-family: var(--rollbox-deco-text);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-coc7-line-red) left top / 1500px 5px no-repeat, var(--rollbox-deco-page);
+  border-color: transparent;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-status-icon {
+  background: var(--rollbox-cell);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-status-by {
+  font-family: var(--rollbox-deco-display);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-status-card:hover {
+  border-color: transparent;
+  filter: brightness(120%);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-alert {
+  border-color: var(--rollbox-accent);
+}
+
+/* Combat order. */
+
+/* The header as CoC7's green window bar. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-header {
+  min-height: 30px;
+  padding: 0 9px;
+  background: var(--rollbox-deco-window);
+  border-radius: 6px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-title {
+  font-family: var(--rollbox-deco-ui);
+  font-size: 13px;
+  color: #fff;
+}
+
+/* The current turn outlined all the way round (outside the card, so its width never changes). */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-current {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--rollbox-deco-window), 0 0 0 3px #c48a7a, var(--rollbox-deco-shadow);
+}
+
+/*
+ * The rows above the full card in one textured group card, those below it in another, as the controls are one card;
+ * each row a faint cell inside it. The meters as wide as the character cards' (a little narrower), with their gap.
+ */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-rows {
+  --rollbox-meter-width: 14px;
+  padding: 4px;
+  background: var(--rollbox-deco-page);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-rows .rollbox-cards-list {
+  --rollbox-row-gap: 3px;
+  overflow: visible;
+}
+
+/* The standing-by list scrolls past five rows (combat.css): half of this theme's 36px row each, the 2px round it
+   keeping the current turn's outline inside the scrolled box. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-rows .rollbox-turn-standing-list {
+  --rollbox-standing-row: 18px;
+  max-height: calc(5 * var(--rollbox-standing-row) + 4 * var(--rollbox-row-gap) + 4px);
+  margin: -2px;
+  padding: 2px;
+  overflow-y: auto;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-rows .rollbox-meters {
+  gap: 3px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-rows .rollbox-vbar-value {
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+/* The gap a little narrower than the character cards', so a long name keeps its room beside the meters. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-row-card {
+  --rollbox-row-height: 36px;
+  gap: 3px;
+  padding: 3px 2px;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+/*
+ * The standing-by group: the green tentacle line turned upside down along its top, so no blank band is left where the
+ * tentacles sit at the bottom of the other cards. "Standing by" in white, centred in the band under the green line
+ * (which, drawn 34px high and flipped, takes the band's top 10px), never on the line itself.
+ */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-standing-first {
+  padding-top: 0;
+  overflow: hidden;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-standing-first > .rollbox-turn-standing-title,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-standing-heading {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0 -4px 2px;
+  padding: 10px 8px 0;
+  font-family: var(--rollbox-deco-display);
+  font-size: 14px;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-standing-heading {
+  margin: 0;
+  overflow: hidden;
+  background: var(--rollbox-deco-page);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-standing-first > .rollbox-turn-standing-title::before,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-standing-heading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--rollbox-coc7-ornament-green) right bottom / 900px 34px no-repeat;
+  transform: scaleY(-1);
+}
+
+/* End of round on the page's own colour, as the cards. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-round-end {
+  font-family: var(--rollbox-deco-text);
+  background: var(--rollbox-deco-page);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-row-card .rollbox-who {
+  overflow: hidden;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-row-card .rollbox-name {
+  font-size: 12px;
+}
+
+/* The current turn's row outlined all round too (the row's own shadow would otherwise replace the outline). */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-row-card.rollbox-turn-current {
+  box-shadow: 0 0 0 1px #c9a43a;
+}
+
+/* The turn controls on a textured card, with the green tentacle line at the bottom. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-controls {
+  box-sizing: border-box;
+  gap: 5px;
+  padding: 7px 8px 0;
+  background: var(--rollbox-deco-page);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-controls::after {
+  content: "";
+  height: 34px;
+  margin: -4px -8px 0;
+  background: var(--rollbox-coc7-ornament-green) right bottom / 900px 34px no-repeat;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-button {
+  font-family: var(--rollbox-deco-text);
+  color: var(--rollbox-text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 4px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-button.rollbox-active {
+  color: var(--rollbox-deco-active);
+  background: var(--rollbox-pressed);
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-rejoin {
+  border-color: var(--rollbox-accent);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-turn-button.rollbox-confirm {
+  font-family: var(--rollbox-deco-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  background: var(--rollbox-deco-main);
+  border-color: #c48a7a;
+}
+
+/* Row values CoC7's way, "55 (27/11)": the " · " separators are hidden and the half and fifth get CoC7's brackets and
+   slash. The text in the page stays "55 · 27 · 11" (flyout.js levelParts). */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-level-sep {
+  display: none;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-level-half::before {
+  content: " (";
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-level-fifth::before {
+  content: "/";
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-level-fifth::after {
+  content: ")";
+}
+
+/* Spacing: buttons whose serif labels need room. */
+
+/* Damage quick-picks and Sanity presets: a little inner room and one size down, so "1D10+DB" doesn't touch. */
+.rollbox-panel.rollbox-theme-art-deco .rollbox-item-quick .rollbox-segment,
+.rollbox-panel.rollbox-theme-art-deco .rollbox-sanity-preset {
+  padding: 0 2px;
+  font-size: 11px;
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-action-cast-hidden {
+  padding: 0 4px;
+}
+
+/* A spell's text (beside the flyout, or beside CoC7's casting window): CoC7's page, the heading in red. */
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-spell-text {
+  font-family: var(--rollbox-deco-text);
+  background: var(--rollbox-deco-page);
+  border-color: transparent;
+  box-shadow: var(--rollbox-deco-shadow);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-spell-text-title {
+  font-family: var(--rollbox-deco-ui);
+  color: var(--rollbox-deco-name);
+}
+
+/* The setup check's notice and window (setup/setup.css) */
+
+.rollbox-panel.rollbox-theme-art-deco.rollbox-setup,
+.rollbox-panel.rollbox-theme-art-deco.rollbox-setup-notice {
+  background: var(--rollbox-deco-page);
+  box-shadow: var(--rollbox-deco-shadow);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-setup-title {
+  font-family: var(--rollbox-deco-display);
+  font-size: var(--font-size-18, 18px);
+  font-weight: normal;
+}
+
+/* A fight's window and notices (combat/fight-boxes.js) */
+
+.rollbox-panel.rollbox-theme-art-deco.rollbox-fight-window,
+.rollbox-panel.rollbox-theme-art-deco.rollbox-fight-notice {
+  background: var(--rollbox-deco-page);
+  box-shadow: var(--rollbox-deco-shadow);
+}
+
+.rollbox-panel.rollbox-theme-art-deco .rollbox-fight-title {
+  font-family: var(--rollbox-deco-display);
+  font-size: var(--font-size-18, 18px);
+  font-weight: normal;
+}

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, mock, test } from "node:test";
 import * as RR from "../scripts/roll-requests/index.js";
 import * as L from "../scripts/roll-requests/links.js";
-import { CLICK_DELAY_MS, CLICK_TRIES } from "../scripts/roll-requests/card-buttons.js";
-import { makeCoC7, makeEnv, makeRollActor } from "./mocks.mjs";
+import { CLICK_DELAY_MS, CLICK_TRIES, pressControl } from "../scripts/roll-requests/card-buttons.js";
+import { makeCoC7, makeDom, makeEnv, makeRollActor } from "./mocks.mjs";
 
 const STATS = { str: 50, con: 60, siz: 65, dex: 55, app: 45, int: 70, pow: 40, edu: 75 };
 
@@ -29,10 +29,13 @@ const npc = (options = {}) => makeRollActor({ name: "Guard", type: "npc", owners
 const spot = { name: "Spot Hidden", value: 60, cocid: "i.skill.spot-hidden" };
 const listen = { name: "Listen", value: 40, cocid: "i.skill.listen" };
 
-/** A rendered CoC7 card for the watcher: a fake element whose button records a click. */
+/** A rendered CoC7 card for the watcher: a fake element whose button records a click (a dispatched click event). */
 function renderCard(env, flags, { button = true } = {}) {
   const clicks = [];
-  const html = { querySelector: (sel) => (button ? { disabled: false, click: () => clicks.push(sel) } : null) };
+  const view = { MouseEvent: class { constructor(type) { this.type = type; } }, Event: class {} };
+  const fake = (sel) => ({ disabled: false, ownerDocument: { defaultView: view },
+    dispatchEvent: (event) => { if (event.type === "click" && event.currentTarget) clicks.push(sel); } });
+  const html = { querySelector: (sel) => (button ? fake(sel) : null) };
   (env.hooks.renderChatMessageHTML ?? []).slice().forEach((f) => f({ flags: { CoC7: { load: flags } }, isAuthor: true }, html));
   return clicks;
 }
@@ -64,6 +67,11 @@ test("links: roll strings, combined and Sanity links", () => {
   assert.equal(L.sanityLink({ success: "1", failure: "1D6", creature: "Ghoul", label: "The ghoul" }),
     "@coc7.sanloss[sanMin:1,sanMax:1D6,sanReason:Ghoul,difficulty:1,poolModifier:0,blind:false]{The ghoul}");
   assert.equal(L.sanityLink({ success: "0", failure: "1" }), "@coc7.sanloss[sanMin:0,sanMax:1,difficulty:1,poolModifier:0,blind:false]");
+});
+
+test("links: a skill name holding < or > can't be a link option or a roll key (CoC7 puts it into the page as HTML)", () => {
+  assert.deepEqual(["Spot <img src=x onerror=alert(1)>", "a>b"].map(L.isSafeOption), [false, false]);
+  assert.deepEqual(["Spot <img>", "a>b"].map(L.isSafeRollKey), [false, false]);
 });
 
 test("links: labels lose characters that break links or HTML, and are escaped", () => {
@@ -101,7 +109,7 @@ test("checkRequest: combined is never blind; bad checks give null and a warning"
   assert.equal(calls.warnings.length, 3);
 });
 
-test("sanityLoss: numbers and dice are tidied; anything else is refused (the Sanity menu's rule too)", () => {
+test("sanityLoss: numbers and dice are tidied; anything else is refused (the Sanity flyout's rule too)", () => {
   assert.equal(RR.sanityLoss(" 1d4 + 1 "), "1D4+1");
   assert.equal(RR.sanityLoss("D6"), "D6");
   assert.equal(RR.sanityLoss("1D6+1D4-1"), "1D6+1D4-1");
@@ -117,7 +125,7 @@ test("sanityRequest, weaponRequest, improvisedRequest, opposedRequest: shape and
   assert.deepEqual(RR.sanityRequest({ success: " 1 ", failure: "1d6", cause: "The <thing>", creature: "Ghoul, big" }),
     { type: "sanity", success: "1", failure: "1D6", label: "The thing", creature: "Ghoul big" });
   assert.equal(RR.sanityRequest({ failure: "1D6; drop" }), null);
-  assert.equal(RR.sanityRequest({ failure: "0D6+" }), null); // the stricter rule the Sanity menu used (session 11)
+  assert.equal(RR.sanityRequest({ failure: "0D6+" }), null); // the stricter rule the Sanity flyout used (session 11)
   assert.equal(RR.sanityRequest({}).failure, "0");
   assert.equal(RR.weaponRequest({}), null);
   assert.equal(RR.weaponRequest({ weaponId: "w1", blind: true }).blind, true);
@@ -154,32 +162,6 @@ test("whisper: a sheet skill without a CoC ID goes by its sheet name; a renamed 
   await RR.send(RR.checkRequest({ checks: [{ kind: "skill", name: "Language (Own)", cocid: "i.skill.language-own" }] }), [alice]);
   assert.match(env.chat[0].content, /name:Spot {2}hidden,/);
   assert.match(env.chat[1].content, /name:i\.skill\.language-own,/);
-});
-
-test("chat: posted publicly, one message per character, never whispered", async () => {
-  const { env } = setup();
-  const alice = pc(); const bob = pc({ name: "Bob", owners: [game.users[2]] });
-  await RR.send(RR.checkRequest({ checks: [{ kind: "characteristic", name: "dex" }], blind: true }), [alice, bob], { mode: "chat" });
-  assert.equal(env.chat.length, 2);
-  assert.ok(env.chat.every((m) => !("whisper" in m)));
-  assert.match(env.chat[0].content, /subtype:characteristic,name:dex,difficulty:1,blind\]/);
-  assert.match(env.chat[1].content, /requested Bob make/);
-});
-
-test("link: copies the request to the clipboard; nothing sent, nothing rolled", async () => {
-  const { env, calls } = setup();
-  const guard = npc();
-  const result = await RR.send(RR.checkRequest({ checks: [{ kind: "attribute", name: "lck" }] }), [guard], { mode: "link" });
-  assert.equal(result.copied, "@coc7.check[subtype:attribute,name:lck,difficulty:1,blind:false]");
-  assert.deepEqual(calls.copied, [result.copied]);
-  assert.equal(env.chat.length, 0);
-  assert.deepEqual(guard.calls, []);
-});
-
-test("link with nobody selected: the generic link, skills by Rollbox's CoC ID", async () => {
-  const { calls } = setup();
-  await RR.send(RR.checkRequest({ checks: [{ kind: "skill", name: "Climb" }] }), [], { mode: "link" });
-  assert.match(calls.copied[0], /name:i\.skill\.climb,/);
 });
 
 test("several characters: each player character gets a request, the NPC is rolled; duplicates once", async () => {
@@ -455,12 +437,6 @@ test("Sanity: characters without a Sanity value are skipped", async () => {
   assert.equal(result.skipped[0].reason, "no Sanity value");
 });
 
-test("Sanity: Copy link copies the Sanity link", async () => {
-  const { calls } = setup();
-  await RR.send(RR.sanityRequest({ success: "0", failure: "1D4" }), [], { mode: "link" });
-  assert.equal(calls.copied[0], "@coc7.sanloss[sanMin:0,sanMax:1D4,difficulty:1,poolModifier:0,blind:false]");
-});
-
 // --- Opposed ----------------------------------------------------------------------------------------
 
 test("opposed: one CoC7 card with both sides, regular difficulty, dice; Start rolls clicked", async () => {
@@ -470,7 +446,7 @@ test("opposed: one CoC7 card with both sides, regular difficulty, dice; Start ro
   const request = RR.opposedRequest({ sides: [
     { actor: alice, check: { kind: "skill", name: "Stealth" }, dice: 1 },
     { actor: guard, check: { kind: "skill", name: "Spot Hidden" } }] });
-  const result = await RR.send(request, [], { mode: "whisper" });
+  const result = await RR.send(request, []);
   assert.equal(calls.linkActorClick.length, 1);
   assert.equal(calls.linkActorClick[0].actor, alice);
   assert.deepEqual(calls.linkActorClick[0].options, { check: "check", subtype: "opposed", combat: false,
@@ -513,16 +489,6 @@ test("opposed: a missing skill CoC7 can find is left to CoC7; one it can't stops
   assert.equal(calls.notices.length, 1);
   assert.equal(env.hooks.renderChatMessageHTML, undefined);
   assert.deepEqual(result.skipped.map((s) => [s.actor.name, s.reason]), [["Guard", "CoC7 can't find Pilot (Boat)"]]);
-});
-
-test("opposed: Copy link is refused", async () => {
-  const { calls } = setup();
-  const request = RR.opposedRequest({ sides: [{ actor: pc(), check: { kind: "characteristic", name: "str" } },
-    { actor: npc(), check: { kind: "characteristic", name: "str" } }] });
-  await RR.send(request, [], { mode: "link" });
-  assert.equal(calls.linkActorClick.length, 0);
-  assert.deepEqual(calls.copied, []);
-  assert.equal(calls.notices.length, 1);
 });
 
 test("CoC7 fails to make the card: the watch for its button stops, and the Keeper isn't told to click it", async () => {
@@ -578,7 +544,7 @@ test("CoC7's actor method or owners missing: that character is skipped, one warn
   assert.equal(env.chat.length, 0);
 });
 
-test("a CoC7 method that throws: skipped with a warning, never thrown to the menu", async () => {
+test("a CoC7 method that throws: skipped with a warning, never thrown to the flyout", async () => {
   const { calls } = setup();
   const guard = npc();
   guard.characteristicCheck = async () => { throw new Error("boom"); };
@@ -587,8 +553,8 @@ test("a CoC7 method that throws: skipped with a warning, never thrown to the men
   assert.equal(calls.warnings.length, 1);
 });
 
-test("player's client: send does nothing", async () => {
-  const env = makeEnv({ isGM: false });
+test("player's client with the Player Rollbox off: send does nothing", async () => {
+  const env = makeEnv({ isGM: false, values: { rollboxPlayerRollbox: false } });
   const calls = makeCoC7();
   const result = await RR.send(RR.checkRequest({ checks: [{ kind: "characteristic", name: "str" }] }), [pc()]);
   assert.deepEqual(result.requested, []);
@@ -604,10 +570,435 @@ test("never whispered to nobody: owners without ids are skipped, not posted publ
   assert.equal(result.skipped[0].reason, "no player to whisper to");
 });
 
-test("unknown mode or no request: nothing sent", async () => {
-  const { env, calls } = setup();
-  await RR.send(RR.checkRequest({ checks: [{ kind: "characteristic", name: "str" }] }), [pc()], { mode: "shout" });
+test("no request: nothing sent", async () => {
+  const { env } = setup();
   await RR.send(null, [pc()]);
   assert.equal(env.chat.length, 0);
-  assert.equal(calls.warnings.length, 1);
+});
+
+// --- A player's requests (Player Rollbox on) and the Keeper relay --------------------------------------------------
+
+/** Foundry's module socket: what each client emits, and the listener each registers. */
+function socketFor() {
+  const sent = [];
+  const listeners = [];
+  game.socket = { emit: (channel, data) => sent.push([channel, data]), on: (channel, f) => listeners.push([channel, f]) };
+  game.users.get = (id) => game.users.find((user) => user.id === id);
+  return { sent, listeners, deliver: (data, sender) => listeners.forEach(([, f]) => f(data, sender)) };
+}
+
+test("player's client: a check for their own character goes out from their client, whispered to them", async () => {
+  const env = makeEnv({ isGM: false, values: { rollboxPlayerRollbox: true } });
+  makeCoC7();
+  const socket = socketFor();
+  const alice = pc();
+  const result = await RR.send(RR.checkRequest({ checks: [{ kind: "characteristic", name: "str" }] }), [alice]);
+  assert.deepEqual(result.requested, [alice]);
+  assert.deepEqual(env.chat[0].whisper, ["p1"]);
+  assert.deepEqual(socket.sent, []);
+});
+
+test("player's client: an opposed roll goes to the Keeper's client; its answer is the player's result", async () => {
+  makeEnv({ isGM: false, values: { rollboxPlayerRollbox: true } });
+  makeCoC7();
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const guard = npc();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const request = RR.opposedRequest({ sides: [{ actor: alice, check: { kind: "characteristic", name: "str" } },
+    { actor: guard, check: { kind: "characteristic", name: "str" } }] });
+  const pending = RR.send(request, []);
+  await Promise.resolve();
+  const [[channel, message]] = socket.sent;
+  assert.equal(channel, "module.keepers-rollbox");
+  assert.deepEqual([message.type, message.userId, message.payload.request.sides.map((side) => side.actorUuid)],
+    ["send", "p1", ["Actor.Alice", "Actor.Guard"]]);
+  socket.deliver({ type: "answer", id: message.id, to: "p1",
+    answer: { requested: ["Actor.Alice", "Actor.Guard"], rolled: [], skipped: [], copied: null, unavailable: false } }, "gm1");
+  assert.deepEqual((await pending).requested, [alice, guard]);
+});
+
+test("player's client: with no Keeper online the player is told and nothing is sent", async () => {
+  const env = makeEnv({ isGM: false, values: { rollboxPlayerRollbox: true } });
+  makeCoC7();
+  const socket = socketFor();
+  const told = [];
+  globalThis.ui = { notifications: { warn: (text) => told.push(text) } };
+  game.users.activeGM = null;
+  const result = await RR.send(RR.checkRequest({ checks: [{ kind: "characteristic", name: "str" }] }), [npc()]);
+  assert.deepEqual([result.requested, socket.sent, env.chat.length], [[], [], 0]);
+  assert.match(told[0], /Keeper needs to be online/);
+  assert.equal(result.skipped[0].reason, "no Keeper online");
+});
+
+test("Keeper's client: sends a player's opposed roll as its own, leaving the NPC's side to the Keeper, and answers; refuses one with none of their characters", async () => {
+  const { calls, env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  assert.equal(RR.registerKeeperRelay(), true);
+  const alice = pc(); const guard = npc();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const side = (actor) => ({ actorUuid: actor.uuid, check: { kind: "characteristic", name: "str" }, dice: 0 });
+  socket.deliver({ type: "send", id: "p1-1", userId: "p1",
+    payload: { request: { type: "opposed", sides: [side(alice), side(guard)] }, actorUuids: [] } }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(calls.linkActorClick.length, 1);
+  // A player started it: the Keeper rolls the NPC's side, so Start rolls isn't pressed for them (the one render hook
+  // is the maneuver tie watch, there from the start).
+  assert.equal(env.hooks.renderChatMessageHTML?.length ?? 0, 1);
+  assert.match(calls.notices.at(-1), /Roll the NPC's side on CoC7's card/);
+  const answer = socket.sent.find(([, data]) => data.type === "answer")[1];
+  assert.deepEqual([answer.to, answer.answer.requested], ["p1", ["Actor.Alice", "Actor.Guard"]]);
+  socket.deliver({ type: "send", id: "p2-1", userId: "p2",
+    payload: { request: { type: "opposed", sides: [side(alice), side(guard)] }, actorUuids: [] } }, "p2");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(calls.linkActorClick.length, 1);
+  assert.equal(socket.sent.filter(([, data]) => data.type === "answer").at(-1)[1].answer, null);
+});
+
+test("Keeper's client: a player's opposed roll with the opponent's side open makes CoC7's card with their side only, no Start rolls, and tells the GMs; an open card for someone else's side is refused", async () => {
+  const { calls, env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const guard = npc();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const mine = { actorUuid: alice.uuid, check: { kind: "characteristic", name: "str" }, dice: 0 };
+  const open = { actorUuid: guard.uuid, open: true };
+  socket.deliver({ type: "send", id: "p1-1", userId: "p1", payload: { request: { type: "opposed", sides: [mine, open] } } }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.deepEqual(calls.linkActorClick.map((call) => call.options.rolls), ["Actor.Alice#characteristic#str#1"]);
+  // The maneuver tie watch and the roles watch (setRolesWhenJoined); no Start rolls watch.
+  assert.equal(env.hooks.renderChatMessageHTML?.length ?? 0, 2);
+  const note = env.chat.at(-1);
+  assert.deepEqual(note.whisper, ["gm1"]);
+  assert.match(note.content, /Add Guard&#39;s side/);
+  socket.deliver({ type: "send", id: "p1-2", userId: "p1", payload: { request: { type: "opposed",
+    sides: [{ ...mine, actorUuid: guard.uuid }, { actorUuid: alice.uuid, open: true }] } } }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(calls.linkActorClick.length, 1);
+});
+
+test("roles on a player's opposed card: once the Keeper's side joins, the active Keeper's client presses the joined "
+  + "side's role button until the player is Attacker and the joined side Defender; Start rolls is never pressed",
+async () => {
+  const { env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const guard = npc();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  socket.deliver({ type: "send", id: "p1-1", userId: "p1", payload: { request: { type: "opposed", sides: [
+    { actorUuid: alice.uuid, check: { kind: "characteristic", name: "str" }, dice: 0 },
+    { actorUuid: guard.uuid, open: true }] } } }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  const watch = env.hooks.renderChatMessageHTML.at(-1);
+  makeDom();
+  const pressed = [];
+  const render = (rolls) => {
+    const html = document.createElement("div");
+    for (const [uuid, roll] of Object.entries(rolls)) {
+      const portrait = document.createElement("div");
+      portrait.className = "actor-portrait";
+      portrait.dataset.actorUuid = uuid;
+      for (const action of ["participant", "rollNoPlayers"]) {
+        const button = document.createElement("button");
+        button.dataset.action = action;
+        button.addEventListener("click", () => pressed.push([action, roll.name]));
+        portrait.append(button);
+      }
+      html.append(portrait);
+    }
+    // CoC7 saves the sides under their uuids with "/" for "."; the portraits carry the dotted uuid.
+    const saved = Object.fromEntries(Object.entries(rolls).map(([uuid, roll]) => [uuid.replace(/\./g, "/"), roll]));
+    watch({ id: "card1", timestamp: Date.now(), flags: { CoC7: { load: { as: "CoC7ChatOpposedMessage", cardOpen: true,
+      isRolling: false, actorRolls: saved } } } }, html);
+  };
+  const wait = () => mock.timers.tick(CLICK_DELAY_MS);
+  render({ [alice.uuid]: { name: "Alice", participant: "" } });
+  wait();
+  assert.deepEqual(pressed, [], "the player's side alone: nothing to set");
+  render({ [alice.uuid]: { name: "Alice", participant: "" }, [guard.uuid]: { name: "Guard", participant: "" } });
+  wait();
+  render({ [alice.uuid]: { name: "Alice", participant: "" }, [guard.uuid]: { name: "Guard", participant: "A" } });
+  wait();
+  render({ [alice.uuid]: { name: "Alice", participant: "A" }, [guard.uuid]: { name: "Guard", participant: "D" } });
+  wait();
+  assert.deepEqual(pressed, [["participant", "Guard"], ["participant", "Guard"]]);
+  assert.match(env.chat.at(-1).content, /Rollbox then makes Alice the attacker and Guard the defender/);
+});
+
+test("Keeper's client: the sender is the user Foundry's server names; a message without one is ignored", async () => {
+  const { calls } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const guard = npc();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const side = (actor) => ({ actorUuid: actor.uuid, check: { kind: "characteristic", name: "str" }, dice: 0 });
+  const payload = { request: { type: "opposed", sides: [side(alice), side(guard)] }, actorUuids: [] };
+  socket.deliver({ type: "send", id: "p2-1", userId: "p1", payload }, "p2");
+  socket.deliver({ type: "send", id: "p1-0", userId: "p1", payload });
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(calls.linkActorClick.length, 0);
+  socket.deliver({ type: "send", id: "p1-1", payload }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(calls.linkActorClick.length, 1);
+});
+
+test("pressControl: CoC7's handler still finds the pressed button after an await, as with a person's click", async () => {
+  makeEnv();
+  makeDom("<button data-set='aiming'></button>");
+  const node = document.querySelector("button");
+  const seen = [];
+  node.addEventListener("click", async (event) => { await Promise.resolve(); seen.push(event.currentTarget?.dataset.set); });
+  node.click();
+  assert.equal(pressControl(node), true);
+  await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(seen, [undefined, "aiming"]);
+});
+
+test("Keeper's client: a player's Assist with their character helping and an NPC rolling rolls the NPC privately at once, no link to the Keepers; without them, refused", async () => {
+  const { env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const guard = npc();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const request = RR.checkRequest({ checks: [{ kind: "characteristic", name: "str" }], label: "Assist" });
+  const answers = () => socket.sent.filter(([, data]) => data.type === "answer").map(([, data]) => data.answer);
+  socket.deliver({ type: "send", id: "p1-1", userId: "p1",
+    payload: { request, actorUuids: [guard.uuid], mode: "whisper", involvedUuids: [alice.uuid] } }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  socket.deliver({ type: "send", id: "p1-2", userId: "p1", payload: { request, actorUuids: [guard.uuid] } }, "p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.deepEqual(answers().map((answer) => answer?.rolled ?? null), [[guard.uuid], null]);
+  assert.deepEqual(answers()[0].requested, []);
+  assert.equal(guard.calls.length, 1);
+  assert.ok(env.chat.every((message) => !/@coc7/.test(message.content)));
+});
+
+test("Keeper's client: a player's check for another player's investigator with a forged helper list is refused; sent only when Assist confirms the group", async () => {
+  const { env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const bob = pc({ name: "Bob", owners: [game.users[2]] });
+  globalThis.fromUuidSync = (uuid) => [alice, bob].find((a) => a.uuid === uuid) ?? null;
+  const request = RR.checkRequest({ checks: [{ kind: "characteristic", name: "str" }], label: "Assist" });
+  const ask = (id) => socket.deliver({ type: "send", id, userId: "p1",
+    payload: { request, actorUuids: [bob.uuid], involvedUuids: [alice.uuid] } }, "p1");
+  const seen = [];
+  RR.registerHelperCheck((rollers, helpers, user) => { seen.push([rollers, helpers, user?.id]); return false; });
+  ask("p1-1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  RR.registerHelperCheck(() => true);
+  ask("p1-2");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  RR.registerHelperCheck(null);
+  const answers = Object.fromEntries(socket.sent.filter(([, data]) => data.type === "answer")
+    .map(([, data]) => [data.id, data.answer?.requested ?? null]));
+  assert.deepEqual(answers, { "p1-1": null, "p1-2": [bob.uuid] });
+  assert.deepEqual(seen, [[[bob], [alice], "p1"]]);
+  assert.equal(env.chat.length, 1);
+});
+
+test("maneuver notice: read only when a GM or a player of the attacker wrote it; a player's notice naming an NPC attacker is ignored", () => {
+  setup();
+  const { alice, guard } = fighters();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const notice = (attacker, author) => ({ id: "n1", author, flags: { "keepers-rollbox": { maneuver: { attacker,
+    target: alice.uuid, weapon: "gpunch", goal: "restrain", answer: null, card: null } } } });
+  const player = game.users[1];
+  assert.equal(RR.readManeuverNotice(notice(guard.uuid, player)), null);
+  assert.equal(RR.readManeuverNotice(notice(guard.uuid, null)), null);
+  assert.equal(RR.readManeuverNotice(notice(guard.uuid, { isGM: true }))?.attacker, guard.uuid);
+  assert.equal(RR.readManeuverNotice(notice(alice.uuid, player))?.attacker, alice.uuid);
+});
+
+test("maneuver relay: two answers to one notice close together make one card", async () => {
+  const { calls } = fightBackSetup();
+  const answers = await Promise.all([RR.answerManeuver("n1", { answer: "dodge" }), RR.answerManeuver("n1", { answer: "dodge" })]);
+  assert.deepEqual(answers.map((answer) => answer.ok), [true, false]);
+  assert.equal(calls.linkActorClick.length, 1);
+});
+
+test("Keeper's client: a relayed request is rebuilt by its normaliser; an unknown type or another player's character is refused", async () => {
+  const { env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const alice = pc(); const bob = pc({ name: "Bob", owners: [game.users[2]] });
+  globalThis.fromUuidSync = (uuid) => [alice, bob].find((a) => a.uuid === uuid) ?? null;
+  const ask = (id, request, actors) => socket.deliver({ type: "send", id, userId: "p1",
+    payload: { request, actorUuids: actors.map((a) => a.uuid) } }, "p1");
+  ask("p1-1", { type: "check", checks: [{ kind: "characteristic", name: "str" }], dice: "1]{<b>x</b>", label: "<img src=x onerror=alert(1)>Spot" }, [alice]);
+  ask("p1-2", { type: "shout", checks: [] }, [alice]);
+  ask("p1-3", { type: "check", checks: [{ kind: "characteristic", name: "str" }] }, [alice, bob]);
+  for (let i = 0; i < 30; i += 1) await Promise.resolve();
+  assert.equal(env.chat.length, 1);
+  assert.doesNotMatch(env.chat[0].content, /poolModifier|<img|<b>/);
+  const answers = Object.fromEntries(socket.sent.filter(([, data]) => data.type === "answer")
+    .map(([, data]) => [data.id, data.answer?.requested ?? null]));
+  assert.deepEqual(answers, { "p1-1": [alice.uuid], "p1-2": null, "p1-3": null });
+});
+
+// --- Maneuvers on CoC7's opposed card --------------------------------------------------------------
+
+const BRAWL = { name: "Fighting (Brawl)", value: 50 };
+const DODGE = { name: "Dodge", value: 30 };
+
+/** Alice (Build 0, her Punch with Maneuver on) and a Guard (Build 1: a Punch with Maneuver on, a knife, Dodge). */
+function fighters() {
+  const alice = pc({ skills: [BRAWL], weapons: [{ id: "punch", name: "Punch", main: "Fighting (Brawl)" }] });
+  const guard = npc({ skills: [BRAWL, DODGE], weapons: [{ id: "gpunch", name: "Punch", main: "Fighting (Brawl)" },
+    { id: "knife", name: "Knife", main: "Fighting (Brawl)" }] });
+  guard.items.find((i) => i.name === "Dodge").system.isDodge = true;
+  for (const [actor, build] of [[alice, 0], [guard, 1]]) {
+    actor.system.attribs.build = { value: build };
+    for (const weapon of actor.items.filter((i) => i.type === "weapon")) weapon.system.properties = { mnvr: weapon.name === "Punch" };
+  }
+  return { alice, guard, weapon: alice.items.find((i) => i.id === "punch") };
+}
+
+test("maneuverRolls: the attacker's maneuver weapon with the Build dice first; Dodge, a fighting weapon or a counter; ties by the rules", () => {
+  setup();
+  const { alice, guard, weapon } = fighters();
+  const rolls = (answer, defence = null) => RR.maneuverRolls({ attacker: alice, weapon, target: guard, answer, defence });
+  assert.deepEqual(rolls("dodge"), { rolls: ["Actor.Alice#item#Punch#-1#1", "Actor.Guard#skill#Dodge#1"], advantage: "D" });
+  assert.deepEqual(rolls("fight", guard.items.find((i) => i.id === "knife")).rolls[1], "Actor.Guard#item#Knife#1");
+  // A Punch with Maneuver on fights back as the weapon (its Maneuver is off while CoC7 makes the card); as its skill
+  // only when it couldn't be switched off, else CoC7 would call the win a maneuver.
+  const gpunch = guard.items.find((i) => i.id === "gpunch");
+  assert.deepEqual(rolls("fight", gpunch), { rolls: ["Actor.Alice#item#Punch#-1#1", "Actor.Guard#item#Punch#1"], advantage: "A" });
+  assert.equal(RR.maneuverRolls({ attacker: alice, weapon, target: guard, answer: "fight", defence: gpunch, fightAsSkill: true })
+    .rolls[1], "Actor.Guard#skill#Fighting (Brawl)#1");
+  assert.deepEqual(rolls("counter").rolls[1], "Actor.Guard#item#Punch#1"); // the bigger one: no Build dice
+  guard.system.attribs.build.value = 3;
+  assert.match(rolls("dodge").error, /too big/);
+});
+
+test("maneuver relay: the Keeper's client makes CoC7's combat opposed card for the target's player, presses Start Rolls; refuses anyone else", async () => {
+  const { calls, env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const socket = socketFor();
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const { alice, guard } = fighters();
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  // Guard attempts a maneuver on Alice, whose player (p1) answers.
+  guard.items.find((i) => i.id === "gpunch").system.properties.mnvr = true;
+  const notice = { id: "n1", updates: [], author: { isGM: true }, flags: { "keepers-rollbox": { maneuver: { attacker: guard.uuid, target: alice.uuid,
+    weapon: "gpunch", goal: "pushAway", answer: null, card: null } } } };
+  notice.update = async (changes) => { notice.updates.push(changes); };
+  game.messages = { get: (id) => (id === "n1" ? notice : null), contents: [notice] };
+  const ask = (sender) => socket.deliver({ type: "maneuver", id: `${sender}-1`, userId: sender,
+    payload: { noticeId: "n1", answer: "dodge" } }, sender);
+  ask("p2");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(calls.linkActorClick.length, 0);
+  ask("p1");
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.deepEqual(calls.linkActorClick[0].options.rolls, "Actor.Guard#item#Punch#1&&Actor.Alice#skill#Dodge#1");
+  assert.equal(calls.linkActorClick[0].options.combat, true);
+  const clicks = renderCard(env, { as: "CoC7ChatOpposedMessage", actorUuids: [guard.uuid, alice.uuid] });
+  mock.timers.tick(CLICK_DELAY_MS);
+  assert.deepEqual(clicks, ['[data-action="rollNoPlayers"]']);
+});
+
+test("maneuver tie: on a maneuver's card offering Advantage, the active Keeper presses the one the rules give, once", () => {
+  const { env } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  game.users.activeGM = game.users[0];
+  RR.registerKeeperRelay();
+  const notice = { id: "n1", author: { isGM: true }, flags: { "keepers-rollbox": { maneuver: { attacker: "Actor.A", target: "Actor.B",
+    weapon: "w", goal: "restrain", answer: "dodge", card: "c1" } } } };
+  game.messages = { contents: [notice] };
+  const pressed = [];
+  const view = { MouseEvent: class { constructor(type) { this.type = type; } }, Event: class {} };
+  const button = (value) => ({ disabled: false, classList: { contains: () => false }, ownerDocument: { defaultView: view },
+    dispatchEvent: (event) => { if (event.currentTarget) pressed.push(value); } });
+  const html = { querySelectorAll: () => [button("A"), button("D")],
+    querySelector: (sel) => button(sel.match(/data-value="(\w)"/)?.[1]) };
+  const card = { id: "c1", flags: { CoC7: { load: { as: "CoC7ChatOpposedMessage", isCombat: true, cardOpen: true } } } };
+  env.hooks.renderChatMessageHTML.forEach((f) => f(card, html));
+  env.hooks.renderChatMessageHTML.forEach((f) => f(card, html));
+  mock.timers.tick(CLICK_DELAY_MS);
+  assert.deepEqual(pressed, ["D"]); // Dodge: the defender wins the tie
+});
+
+test("maneuver answers: Counter with the weapon picked; No response rolls the attacker's maneuver skill alone with the Build dice", async () => {
+  setup();
+  const { alice, guard, weapon } = fighters();
+  const whip = { type: "weapon", id: "whip", name: "Whip", uuid: `${guard.uuid}.Item.whip`,
+    system: { properties: { mnvr: true }, skill: { main: { id: "", name: "Fighting (Brawl)" } } } };
+  guard.items.push(whip);
+  assert.equal(RR.maneuverRolls({ attacker: alice, weapon, target: guard, answer: "counter", defence: whip }).rolls[1],
+    "Actor.Guard#item#Whip#1");
+  assert.deepEqual(RR.counterWeapons(guard).map((w) => w.name), ["Punch", "Whip"]);
+  const brawl = alice.items.find((i) => i.name === "Fighting (Brawl)");
+  weapon.system.skill.main.id = brawl.id;
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const notice = { id: "n1", updates: [], author: { isGM: true }, flags: { "keepers-rollbox": { maneuver: { attacker: alice.uuid,
+    target: guard.uuid, weapon: "punch", goal: "restrain", answer: null, card: null } } } };
+  notice.update = async (changes) => { notice.updates.push(changes); };
+  game.messages = { get: () => notice, contents: [notice] };
+  assert.deepEqual(await RR.answerManeuver("n1", { answer: "none" }), { ok: true });
+  assert.deepEqual(alice.calls, [["skillCheck", "Fighting (Brawl)", true, { poolModifier: -1 }]]);
+  assert.deepEqual(notice.updates, [{ "flags.keepers-rollbox.maneuver.answer": "none" }]);
+});
+
+
+/** A Guard whose Maneuver-on Punch records its updates, and the notice of Alice's maneuver on him. */
+function fightBackSetup() {
+  const { env, calls } = setup({}, { values: { rollboxPlayerRollbox: true } });
+  const { alice, guard } = fighters();
+  const gpunch = guard.items.find((i) => i.id === "gpunch");
+  gpunch.updates = [];
+  gpunch.update = async (changes) => {
+    gpunch.updates.push(changes);
+    gpunch.system.properties.mnvr = changes["system.properties.mnvr"];
+  };
+  globalThis.fromUuidSync = (uuid) => [alice, guard].find((a) => a.uuid === uuid) ?? null;
+  const notice = { id: "n1", updates: [], author: { isGM: true }, flags: { "keepers-rollbox": { maneuver: { attacker: alice.uuid,
+    target: guard.uuid, weapon: "punch", goal: "restrain", answer: null, card: null } } } };
+  notice.update = async (changes) => { notice.updates.push(changes); };
+  game.messages = { get: () => notice, contents: [notice] };
+  return { env, calls, alice, guard, gpunch };
+}
+
+const OFF = { "system.properties.mnvr": false, "flags.keepers-rollbox.maneuverOff": true };
+const ON = { "system.properties.mnvr": true, "flags.keepers-rollbox.-=maneuverOff": null };
+
+test("fight back with a Maneuver-on Punch: its Maneuver is off while CoC7 makes the card (the Punch as the weapon), back on once the card is posted", async () => {
+  const { env, calls, alice, guard, gpunch } = fightBackSetup();
+  let mnvrAtClick = null;
+  CONFIG.CoC7Link.documentClass._onLinkActorClick = async (actor, options) => {
+    mnvrAtClick = gpunch.system.properties.mnvr;
+    calls.linkActorClick.push({ actor, options });
+  };
+  const answered = RR.answerManeuver("n1", { answer: "fight", weaponId: "gpunch" });
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+  assert.equal(mnvrAtClick, false);
+  assert.equal(calls.linkActorClick[0].options.rolls, "Actor.Alice#item#Punch#-1#1&&Actor.Guard#item#Punch#1");
+  assert.deepEqual(gpunch.updates, [OFF]); // still off until CoC7's card is posted
+  env.hooks.createChatMessage.forEach((f) => f({ id: "c1", flags: { CoC7: { load: { as: "CoC7ChatOpposedMessage",
+    isCombat: true, actorUuids: [alice.uuid, guard.uuid] } } } }));
+  assert.deepEqual(await answered, { ok: true });
+  assert.deepEqual(gpunch.updates, [OFF, ON]);
+  for (const hook of ["createChatMessage", "renderChatMessageHTML"]) env.hooks[hook] = [];
+});
+
+test("fight back with a Maneuver-on Punch: CoC7 throwing still switches it back on; one left off is switched on by restoreManeuvers", async () => {
+  const { env, guard, gpunch } = fightBackSetup();
+  CONFIG.CoC7Link.documentClass._onLinkActorClick = async () => { throw new Error("forced"); };
+  const result = await RR.answerManeuver("n1", { answer: "fight", weaponId: "gpunch" });
+  assert.equal(result.ok, false);
+  assert.deepEqual(gpunch.updates, [OFF, ON]);
+  // Left off (the page closed in between): its sheet gets one update switching it back on; other sheets none.
+  gpunch.flags = { "keepers-rollbox": { maneuverOff: true } };
+  const batches = [];
+  guard.updateEmbeddedDocuments = async (type, updates) => { batches.push([type, updates]); };
+  assert.equal(await RR.restoreManeuvers([guard, fighters().alice]), 1);
+  assert.deepEqual(batches, [["Item", [{ _id: "gpunch", ...ON }]]]);
+  for (const hook of ["createChatMessage", "renderChatMessageHTML"]) env.hooks[hook] = [];
 });

@@ -1,0 +1,639 @@
+/* The panel, its menu and flyout, and the Foundry theme's two palettes every part's CSS uses. See docs/panel.md. */
+
+.rollbox-panel {
+  /*
+   * The Dark palette, the default: Foundry v14's players-card and scene-control colours with fixed light text.
+   * --rollbox-opacity (appearance.js) applies to the backgrounds only, never `opacity`, so text stays readable.
+   */
+  --rollbox-bg-solid: var(--rollbox-color, var(--color-cool-5, #0b0a13));
+  --rollbox-bg: color-mix(in srgb, var(--rollbox-bg-solid) var(--rollbox-opacity, 75%), transparent);
+  --rollbox-border: var(--color-cool-4, #302831);
+  --rollbox-border-hover: var(--color-cool-3, #584a75);
+  /* Borders and fills of the pressed and main buttons; text in the accent colour uses --rollbox-accent-text. */
+  --rollbox-accent: var(--color-warm-2, #c9593f);
+  --rollbox-accent-text: #ec8a70;
+  --rollbox-text: var(--color-light-2, #efe6d8);
+  --rollbox-text-strong: var(--color-light-1, #f7f3e8);
+  --rollbox-text-muted: var(--color-light-4, #d0b8a3);
+  --rollbox-placeholder: #b8aa9b;
+  --rollbox-disabled: #958b9e;
+  /* The red of what's missing or refused, the coral of an Assist target, the blue of the Defender tag. */
+  --rollbox-bad: #f4a09a;
+  --rollbox-target: #e8775d;
+  --rollbox-defender: #8fbfef;
+  /* The bottom character on the two-character sheet: tan, at least 4.5:1 on the panel. */
+  --rollbox-second: #d9b88a;
+  /* An empty tick box or radio (3:1 on the panel); button and cell fill, bar tracks, a pressed button or row. */
+  --rollbox-box: #75698a;
+  --rollbox-cell: rgba(255, 255, 255, 0.05);
+  --rollbox-track: rgba(255, 255, 255, 0.1);
+  --rollbox-pressed: var(--rollbox-bg-solid);
+  /* The character sheet's HP, MP, SAN and Luck bars: the same under both themes. */
+  --rollbox-bar-hp: #d0614f;
+  --rollbox-bar-mp: #5b8fd6;
+  --rollbox-bar-san: #a084d8;
+  --rollbox-bar-luck: #d8a84a;
+  /* Three buttons and two gaps equal the one-character sheet at 100% (182px in Chromium); no script sets it. */
+  --rollbox-sheet-height: 182px;
+  --rollbox-button-gap: 6px;
+  --rollbox-button-height: calc((var(--rollbox-sheet-height) - 2 * var(--rollbox-button-gap)) / 3);
+  /* Sizes: the panel is as wide as Foundry's #players-active; one gap and corner radius throughout. */
+  --rollbox-width: 200px;
+  --rollbox-gap: 8px;
+  --rollbox-radius: 8px;
+  /* One value column, wide enough for three digits at 12px; cards.js sets only how many (--rollbox-cols). */
+  --rollbox-col: calc(1.8 * var(--font-size-12, 12px));
+  /* One vertical HP, SAN or Luck bar's width, in every theme. */
+  --rollbox-meter-width: 17.6px;
+
+  /* In #ui-left-column-1, a flex column with space-between: margin-top auto keeps it on the players list. */
+  position: relative;
+  flex: none;
+  width: var(--rollbox-width);
+  margin-top: auto;
+  pointer-events: none;
+  color: var(--rollbox-text);
+  font-size: var(--font-size-12, 12px);
+  line-height: 1.25;
+}
+
+/* The Light palette: a light background shows the map through more, so the same transparency lets half through. */
+.rollbox-panel.rollbox-theme-light {
+  --rollbox-bg: color-mix(in srgb, var(--rollbox-bg-solid) calc(50% + var(--rollbox-opacity, 75%) / 2), transparent);
+  --rollbox-border: #8d8698;
+  --rollbox-border-hover: #5d5470;
+  --rollbox-accent: #b04a30;
+  --rollbox-accent-text: #983b26;
+  --rollbox-text: #221e29;
+  --rollbox-text-strong: #110e16;
+  --rollbox-text-muted: #423c4b;
+  --rollbox-placeholder: #575160;
+  --rollbox-disabled: #6b6574;
+  --rollbox-bad: #9e1f18;
+  --rollbox-target: #c4553a;
+  --rollbox-defender: #1a5490;
+  --rollbox-second: #6b4a20;
+  --rollbox-box: #7d768a;
+  --rollbox-cell: rgba(0, 0, 0, 0.07);
+  --rollbox-track: rgba(0, 0, 0, 0.14);
+  --rollbox-pressed: color-mix(in srgb, var(--rollbox-accent) 16%, var(--rollbox-bg-solid));
+}
+
+/* Inside the panel, shared.css's .rollbox-panel [hidden][hidden] rule keeps hidden things hidden. */
+.rollbox-panel[hidden] {
+  display: none;
+}
+
+/* One grid cell: the character cards sit over an invisible sheet (sheetGhost), so they are at least its height. */
+.rollbox-panel .rollbox-character-panel {
+  display: grid;
+  width: var(--rollbox-width);
+}
+
+.rollbox-panel .rollbox-character-panel > * {
+  grid-area: 1 / 1;
+}
+
+.rollbox-panel .rollbox-sheet-ghost {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Cards: the same box as Foundry's #players-active. */
+.rollbox-card {
+  pointer-events: all;
+  box-sizing: border-box;
+  width: var(--rollbox-width);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--rollbox-bg);
+  border: 1px solid var(--rollbox-border);
+  border-radius: var(--rollbox-radius);
+}
+
+.rollbox-sheet-head,
+.rollbox-character-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rollbox-portrait,
+.rollbox-portrait-small {
+  flex: none;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--rollbox-border);
+  border-radius: 50%;
+  background: var(--rollbox-bg-solid);
+}
+
+.rollbox-portrait {
+  width: 34px;
+  height: 34px;
+}
+
+.rollbox-portrait-small {
+  width: 22px;
+  height: 22px;
+}
+
+.rollbox-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.rollbox-name,
+.rollbox-sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rollbox-name {
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-13, 13px);
+  font-weight: 600;
+}
+
+.rollbox-sub {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* The occupation · owner line under a sheet's name: a size down, so a long occupation keeps its last letters. */
+.rollbox-sheet-head .rollbox-sub {
+  font-size: var(--font-size-10, 10px);
+}
+
+.rollbox-panel .rollbox-open-sheet {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--rollbox-text);
+  background: var(--rollbox-cell);
+  border: 1px solid var(--rollbox-border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.rollbox-panel .rollbox-open-sheet:hover {
+  color: var(--rollbox-text-strong);
+  border-color: var(--rollbox-border-hover);
+}
+
+/* HP, MP, SAN, Luck */
+.rollbox-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.rollbox-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 6px;
+  background: var(--rollbox-cell);
+  border-radius: 5px;
+}
+
+.rollbox-stat-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.rollbox-stat-label {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-stat-value {
+  color: var(--rollbox-text-strong);
+  font-weight: 600;
+}
+
+.rollbox-stat-bar {
+  height: 2.6px;
+  background: var(--rollbox-track);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rollbox-stat-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.rollbox-stat-hp .rollbox-stat-fill { background: var(--rollbox-bar-hp); }
+.rollbox-stat-mp .rollbox-stat-fill { background: var(--rollbox-bar-mp); }
+.rollbox-stat-san .rollbox-stat-fill { background: var(--rollbox-bar-san); }
+.rollbox-stat-luck .rollbox-stat-fill { background: var(--rollbox-bar-luck); }
+
+/* The eight characteristics, four to a row */
+.rollbox-characteristics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.rollbox-characteristic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 0;
+  background: var(--rollbox-cell);
+  border-radius: 4px;
+}
+
+.rollbox-characteristic-label {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-10, 10px);
+}
+
+.rollbox-characteristic-value {
+  color: var(--rollbox-text-strong);
+  font-weight: 600;
+}
+
+/* Parts only the CoC7 themes show (sheet.js); the value and its levels share a wrapper that takes no box. */
+.rollbox-characteristic-numbers {
+  display: contents;
+}
+
+.rollbox-characteristic-levels,
+.rollbox-stat-band,
+.rollbox-derived {
+  display: none;
+}
+
+/* The two-character sheet: the bottom character's name and values are tan (--rollbox-second). */
+.rollbox-pair-tile {
+  gap: 1px;
+}
+
+.rollbox-pair-rule {
+  align-self: stretch;
+  margin: 0 6px;
+  border-top: 1px solid var(--rollbox-border);
+}
+
+.rollbox-second .rollbox-name,
+.rollbox-second .rollbox-stat-value,
+.rollbox-characteristic-value.rollbox-second {
+  color: var(--rollbox-second);
+}
+
+/* A portrait that deselects gives way to a × of the same size on hover, so nothing moves. */
+.rollbox-panel .rollbox-deselect {
+  position: relative;
+  flex: none;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rollbox-text-strong);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* Sized by the button, not by Font Awesome's own glyph width, so the circle is the portrait's. */
+.rollbox-panel .rollbox-deselect-cross {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 12px;
+  box-sizing: border-box;
+  background: var(--rollbox-cell);
+  border: 1px solid var(--rollbox-border-hover);
+  border-radius: 50%;
+}
+
+.rollbox-panel .rollbox-deselect img {
+  display: block;
+  box-sizing: border-box;
+}
+
+.rollbox-panel :is(.rollbox-character-card, .rollbox-sheet-head):hover .rollbox-deselect img {
+  visibility: hidden;
+}
+
+.rollbox-panel :is(.rollbox-character-card, .rollbox-sheet-head):hover .rollbox-deselect-cross {
+  display: flex;
+}
+
+.rollbox-panel .rollbox-deselect:hover .rollbox-deselect-cross {
+  color: var(--rollbox-bad);
+  border-color: var(--rollbox-bad);
+}
+
+/* Character cards: no upper limit on the selection, so the list scrolls. */
+.rollbox-cards-head {
+  display: grid;
+  grid-template-columns: 1fr repeat(var(--rollbox-cols, 2), var(--rollbox-col));
+  align-items: baseline;
+  gap: 4px;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+.rollbox-cards-title {
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-13, 13px);
+  font-weight: 600;
+}
+
+/* Value columns (SAN and Luck, SAN alone, or STR or SIZ: they follow the open flyout). */
+.rollbox-cards-col,
+.rollbox-cards-value {
+  width: var(--rollbox-col);
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A longer header ("STR/SIZ") reaches left, into the title's room, instead of out of the card. */
+.rollbox-cards-col {
+  display: flex;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* Ten rows before it scrolls, sized by rows (padding plus two lines at a fixed line height), not pixels. */
+.rollbox-cards-list {
+  --rollbox-row-height: calc(6px + 1.25 * (var(--font-size-12, 12px) + var(--font-size-10, 10px)));
+  --rollbox-row-gap: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-row-gap);
+  max-height: calc(10 * var(--rollbox-row-height) + 9 * var(--rollbox-row-gap));
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.rollbox-character-card {
+  box-sizing: border-box;
+  flex: none;
+  height: var(--rollbox-row-height);
+  margin: 0;
+  gap: 4px;
+  padding: 3px 4px;
+  overflow: hidden;
+  background: var(--rollbox-cell);
+  border-radius: 5px;
+}
+
+.rollbox-character-card .rollbox-name {
+  font-size: var(--font-size-12, 12px);
+  line-height: 1.25;
+}
+
+.rollbox-character-card .rollbox-sub {
+  font-size: var(--font-size-10, 10px);
+  line-height: 1.25;
+}
+
+/* The menu and flyout beside the character panel, bottoms aligned; the buttons never stretch or squish. */
+.rollbox-side {
+  position: absolute;
+  left: calc(100% + var(--rollbox-gap));
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--rollbox-gap);
+}
+
+
+.rollbox-menu {
+  pointer-events: all;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-button-gap);
+}
+
+.rollbox-panel .rollbox-menu-button {
+  flex: none;
+  width: 56px;
+  height: var(--rollbox-button-height);
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: var(--font-size-12, 12px);
+  color: var(--rollbox-text);
+  background: var(--rollbox-bg);
+  border: 1px solid var(--rollbox-border);
+  border-radius: var(--rollbox-radius);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* A player's menu: however many buttons it has fill the sheet's height, as the Keeper's three do. */
+.rollbox-panel .rollbox-menu.rollbox-menu-fill .rollbox-menu-button {
+  height: calc((var(--rollbox-sheet-height) - (var(--rollbox-buttons, 3) - 1) * var(--rollbox-button-gap))
+    / var(--rollbox-buttons, 3));
+}
+
+/* Where a player's being-attacked alert shows, beside the menu (flyouts/alert setAlertHost). */
+.rollbox-alert-slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap);
+}
+
+.rollbox-alert-slot:empty {
+  display: none;
+}
+
+.rollbox-panel .rollbox-menu-button i {
+  margin: 0;
+  font-size: 16px;
+}
+
+.rollbox-panel .rollbox-menu-button:hover {
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-bg-solid);
+  border-color: var(--rollbox-border-hover);
+}
+
+.rollbox-panel .rollbox-menu-button[aria-pressed="true"] {
+  color: var(--rollbox-text-strong);
+  background: var(--rollbox-pressed);
+  border-color: var(--rollbox-accent);
+  box-shadow: inset 0 0 0 1px var(--rollbox-accent);
+}
+
+/* A player's whole menu while their investigator can't act (down, or in a bout of madness): the reason is the hover. */
+.rollbox-panel .rollbox-menu-button.rollbox-menu-greyed,
+.rollbox-panel .rollbox-menu-button.rollbox-menu-greyed:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rollbox-flyout {
+  pointer-events: all;
+  box-sizing: border-box;
+  width: 320px;
+  /* 70% of the screen at any "Panel size": the panel's scale would otherwise stretch it past the top. */
+  max-height: calc(70vh / var(--rollbox-scale, 1));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rollbox-gap);
+  padding: 8px 10px;
+  background: var(--rollbox-bg);
+  border: 1px solid var(--rollbox-border);
+  border-radius: var(--rollbox-radius);
+}
+
+/* A flyout's title: the flyout's, and the Opposed roll card's. */
+.rollbox-panel .rollbox-flyout-title {
+  margin: 0;
+  padding: 0;
+  border: none;
+  color: var(--rollbox-text-strong);
+  font-size: var(--font-size-14, 14px);
+  font-weight: 600;
+}
+
+/* Vertical bars on the rows: a bordered column that drains from the top, fitting the row's height. */
+.rollbox-panel .rollbox-cards-bars {
+  --rollbox-col: var(--rollbox-meter-width);
+}
+
+/* The headings in the rows' own padding and gap, so each sits centred over its bar. */
+.rollbox-panel .rollbox-cards-bars .rollbox-cards-head {
+  gap: 3px;
+  padding: 0 4px;
+}
+
+.rollbox-panel .rollbox-cards-bars .rollbox-cards-col {
+  justify-content: center;
+  font-size: var(--font-size-10, 10px);
+}
+
+.rollbox-panel .rollbox-cards-bars .rollbox-character-card {
+  gap: 3px;
+}
+
+.rollbox-panel .rollbox-vbar {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--rollbox-meter-width);
+  height: calc(var(--rollbox-row-height) - 6px);
+  overflow: hidden;
+  background: var(--rollbox-track);
+  border: 1px solid var(--rollbox-box);
+  border-radius: 4px;
+}
+
+.rollbox-panel .rollbox-vbar-fill {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: block;
+}
+
+.rollbox-panel .rollbox-cards-hp .rollbox-vbar-fill { background: var(--rollbox-bar-hp); }
+.rollbox-panel .rollbox-cards-mp .rollbox-vbar-fill { background: var(--rollbox-bar-mp); }
+.rollbox-panel .rollbox-cards-san .rollbox-vbar-fill { background: var(--rollbox-bar-san); }
+.rollbox-panel .rollbox-cards-luck .rollbox-vbar-fill { background: var(--rollbox-bar-luck); }
+
+/* The number over the bar: white with a shadow, readable on the fill and on the empty track. */
+.rollbox-panel .rollbox-vbar-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: var(--font-size-10, 10px);
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000, 0 0 2px #000;
+}
+
+/* With several selected, a click on a character card selects only that character. */
+.rollbox-panel .rollbox-character-card-pick {
+  cursor: pointer;
+}
+
+/* The players list (nothing selected): a row selects its investigator's token; one not on this scene is greyed. */
+.rollbox-panel .rollbox-players-row {
+  cursor: pointer;
+}
+
+.rollbox-panel .rollbox-players-row:hover {
+  background: var(--rollbox-track);
+}
+
+.rollbox-panel .rollbox-players-row.rollbox-players-away {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rollbox-panel .rollbox-players-none {
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+}
+
+/* A player with no investigator: the message in the panel's place, with a small × to close it. */
+.rollbox-panel .rollbox-no-investigator {
+  position: relative;
+  padding-right: 22px;
+}
+
+.rollbox-panel .rollbox-no-investigator-text {
+  margin: 0;
+  color: var(--rollbox-text);
+  font-size: var(--font-size-12, 12px);
+  line-height: 1.4;
+}
+
+.rollbox-panel .rollbox-no-investigator-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  line-height: 1;
+  color: var(--rollbox-text-muted);
+  background: none;
+  border: none;
+}
+
+/* With nothing selected, the two short lines under a flyout's title: it goes to every investigator. */
+.rollbox-panel .rollbox-everyone-note p {
+  margin: 0;
+  color: var(--rollbox-text-muted);
+  font-size: var(--font-size-11, 11px);
+  line-height: 1.3;
+}
